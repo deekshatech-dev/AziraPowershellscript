@@ -35,6 +35,10 @@ function Get-SSASConfiguration {
         $svr = New-Object Microsoft.AnalysisServices.Server
         $svr.Connect($ssasInstanceName)
         
+        $instanceName = "localhost"
+        $server = New-Object -TypeName Microsoft.SqlServer.Management.Smo.Server -ArgumentList $instanceName
+        $serverVersion = $server.Information.VersionString
+        $output += "`nssqlVersion: $serverVersion"
 
         # To create a new DB
         # $svr.databases.add("SSASDB")
@@ -45,15 +49,15 @@ function Get-SSASConfiguration {
 
 
         $ssasVersion = $svr.Version
-        $output+= "`nssasVersion: $ssasVersion"
+        $output += "`nssasVersion: $ssasVersion"
         $ssasServerMode = $svr.ServerMode
-        $output+= "`nssasServerMode: $ssasServerMode"
+        $output += "`nssasServerMode: $ssasServerMode"
         $ssasCollation = $svr.Collation
-        $output+= "`nssasCollation: $ssasCollation"
+        $output += "`nssasCollation: $ssasCollation"
         $ssasCubes = $svr.Cubes
-        $output+= "`nssasCubes: $ssasCubes"
+        $output += "`nssasCubes: $ssasCubes"
         $ssasEdition = $svr.Edition
-        $output+= "$ssasEdition"
+        $output += "$ssasEdition"
         $ssasServerMode = $svr.ServerMode
 
     }

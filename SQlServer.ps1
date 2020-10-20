@@ -26,9 +26,9 @@ function Get-MachineDetails {
         
     }
     Process {   
-#        Install-Module SqlServer -AllowClobber
+        #        Install-Module SqlServer -AllowClobber
         
-        Import-Module SQLPS
+        # Import-Module SQLPS
         Import-Module SqlServer
 
         $server_name = $env:COMPUTERNAME
@@ -96,18 +96,38 @@ function Get-MachineDetails {
                 $tempDbmdfPath = $folder + "\" + $file.Name
                 $output += "`n tempDbmdfPath: $tempDbmdfPath"
             }
-            if ($file.Name -eq $dbName + ".mdf") {
-                $DbMdfFilePath = $folder + "\" + $file.Name
-                $output += "`n DbMdfFilePath: $DbMdfFilePath"
-                $DbMdfFileSize = ( $file.Length / 1000000 ).ToString() + " MB"
-                $output += "`n DbMdfFilePath: $DbMdfFileSize"
+            else {
+                if ($file.Name -match ".mdf") {
+                    $mdfpath = $folder + "\" + $file.Name
+                    $output += "`n MDFPath: $mdfpath"
+                    $mdfsize = ( $file.Length / 1000000 ).ToString() + " MB"
+                    $output += "`n MDFSize: $mdfsize"
+                }
+                elseif ($file.Name -match ".ldf") {
+                    $ldfpath = $folder + "\" + $file.Name
+                    $output += "`n LDFPath: $ldfpath"
+                    $ldfsize = ( $file.Length / 1000000 ).ToString() + " MB"
+                    $output += "`n LDFSize: $ldfsize"
+                }
+                else{
+
+                }
+                
             }
-            if ($file.Name -eq $dbName + "_log.ldf") {
-                $DbLdfFilePath = $folder + "\" + $file.Name
-                $output += "`n DbLdfFilePath: $DbLdfFilePath"
-                $DbLdfFileSize = ( $file.Length / 1000000 ).ToString() + " MB"
-                $output += "`n DbLdfFileSize: $DbLdfFileSize"
-            }
+
+
+            # if ($file.Name -eq $dbName + ".mdf") {
+            #     $DbMdfFilePath = $folder + "\" + $file.Name
+            #     $output += "`n DbMdfFilePath: $DbMdfFilePath"
+            #     $DbMdfFileSize = ( $file.Length / 1000000 ).ToString() + " MB"
+            #     $output += "`n DbMdfFilePath: $DbMdfFileSize"
+            # }
+            # if ($file.Name -eq $dbName + "_log.ldf") {
+            #     $DbLdfFilePath = $folder + "\" + $file.Name
+            #     $output += "`n DbLdfFilePath: $DbLdfFilePath"
+            #     $DbLdfFileSize = ( $file.Length / 1000000 ).ToString() + " MB"
+            #     $output += "`n DbLdfFileSize: $DbLdfFileSize"
+            # }
         }
         # $creds = Get-SqlLogin -ServerInstance "localhost"
         # foreach ($cred in $creds) {
