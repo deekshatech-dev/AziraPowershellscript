@@ -31,11 +31,27 @@ function Get-MachineDetails {
         $svr = New-Object Microsoft.AnalysisServices.Server
         $svr.Connect($ssasInstanceName)
         
-        $svr.Edition
-        $svr.ProductLevel
-        $svr.ProductName
-        $svr.ServerMode
-        $svr.ServerProperties
+
+        # To create a new DB
+        # $svr.databases.add("SSASDB")
+        # $DB = $svr.databases.item("SSASDB")
+        # $DB.update()
+        # $DB.description = "Testing SSAS DB addition"
+        # $DB.update()
+
+
+        $ssasVersion = $svr.Version
+        $output+= "ssasVersion: $ssasVersion"
+        $ssasServerMode = $svr.ServerMode
+        $output+= "ssasServerMode: $ssasServerMode"
+        $ssasCollation = $svr.Collation
+        $output+= "ssasCollation: $ssasCollation"
+        $ssasCubes = $svr.Cubes
+        $output+= "ssasCubes: $ssasCubes"
+        $ssasEdition = $svr.Edition
+        $output+= "$ssasEdition"
+        $ssasServerMode = $svr.ServerMode
+        $output+= "ssasServerMode: $ssasServerMode"
         
 
     }
