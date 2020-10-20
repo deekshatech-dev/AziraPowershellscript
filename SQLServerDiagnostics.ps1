@@ -12,7 +12,7 @@
     DateCreated: 14th Oct 2020
 #>
 
-function Get-MachineDetails {
+function Get-ServerDiagnostics {
     
     Param
     (
@@ -110,4 +110,4 @@ function Get-MachineDetails {
     }
 }
 
-Get-MachineDetails
+Get-ServerDiagnostics

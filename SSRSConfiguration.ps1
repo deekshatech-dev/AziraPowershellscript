@@ -12,7 +12,7 @@
     DateCreated: 14th Oct 2020
 #>
 
-function Get-MachineDetails {
+function Get-SSRSConiguration {
     
     Param
     (
@@ -22,8 +22,7 @@ function Get-MachineDetails {
 
     Begin {
         $output = ""
-        $totalspace = 0
-        
+        $v = 12        
         # Import-Module SQLPS
     }
     Process {   
@@ -34,8 +33,6 @@ function Get-MachineDetails {
         
         $folder = $server.Information.MasterDBLogPath
         # $folder
-
-        $v = 14
 
         $rs = (Get-WmiObject -namespace root\Microsoft\SqlServer\ReportServer  -class __Namespace).Name
         $nspace = "root\Microsoft\SQLServer\ReportServer\$rs\v$v\Admin"
@@ -90,4 +87,4 @@ function Get-MachineDetails {
     }
 }
 
-Get-MachineDetails
+Get-SSRSConiguration

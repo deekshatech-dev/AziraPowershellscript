@@ -26,7 +26,7 @@ function Get-MachineDetails {
         
     }
     Process {   
-        Install-Module SqlServer -AllowClobber
+#        Install-Module SqlServer -AllowClobber
         
         Import-Module SQLPS
         Import-Module SqlServer

@@ -12,7 +12,7 @@
     DateCreated: 14th Oct 2020
 #>
 
-function Get-MachineDetails {
+function Get-SSASConfiguration {
     
     Param
     (
@@ -41,18 +41,16 @@ function Get-MachineDetails {
 
 
         $ssasVersion = $svr.Version
-        $output+= "ssasVersion: $ssasVersion"
+        $output+= "`nssasVersion: $ssasVersion"
         $ssasServerMode = $svr.ServerMode
-        $output+= "ssasServerMode: $ssasServerMode"
+        $output+= "`nssasServerMode: $ssasServerMode"
         $ssasCollation = $svr.Collation
-        $output+= "ssasCollation: $ssasCollation"
+        $output+= "`nssasCollation: $ssasCollation"
         $ssasCubes = $svr.Cubes
-        $output+= "ssasCubes: $ssasCubes"
+        $output+= "`nssasCubes: $ssasCubes"
         $ssasEdition = $svr.Edition
         $output+= "$ssasEdition"
         $ssasServerMode = $svr.ServerMode
-        $output+= "ssasServerMode: $ssasServerMode"
-        
 
     }
     End {
@@ -60,4 +58,4 @@ function Get-MachineDetails {
     }
 }
 
-Get-MachineDetails
+Get-SSASConfiguration
