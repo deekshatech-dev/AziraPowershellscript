@@ -47,7 +47,7 @@ function Get-SSRSConiguration {
             $ssrsDB = $r.DatabaseName
             # $output += "`n ssrsDB: $ssrsDB"
             # $vPath = $r.VirtualDirectoryReportServer
-            $output += "`n vPath: $vPath"
+            # $output += "`n vPath: $vPath"
             $urls = $r.ListReservedUrls() 
             $urls = $urls.UrlString[0]
             $urls = $urls.Replace('+', $servername) + "/$vPath"

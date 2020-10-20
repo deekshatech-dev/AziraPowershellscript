@@ -26,19 +26,23 @@ function Get-ServerDiagnostics {
         
     }
     Process {   
-        Import-Module SQLPS
+        # Import-Module SQLPS
 
         $server_name = $env:COMPUTERNAME
-        $output += "server_name: $server_name"
+        $output += "`n server_name: $server_name"
         $dbName = "PowershellDB"
-        $output += "dbName: $dbName"
+        $output += "`n dbName: $dbName"
         $instanceName = "localhost"
         $server = New-Object -TypeName Microsoft.SqlServer.Management.Smo.Server -ArgumentList $instanceName
         
         $folder = $server.Information.MasterDBLogPath
-        Get-SqlBackupHistory -ServerInstance "localhost" -DatabaseName "PowershellDB"
         $tempFileCount = 0
-        foreach ($file in Get-Children $folder) {
+        $tempDbExist = "Does Not Exists"
+        $modelDbExist = "Does Not Exists"
+        $masterDbExist = "Does Not Exists"
+        $MSDbExist = "Does Not Exists"
+        
+        foreach ($file in Get-ChildItem $folder) {
              if($file.Name -Contains "tempdb"){
                  $tempDbExist = "Exists: TempDB frequently grows unpredictably, putting your server at risk of running out of C drive space and crashing hard. C is also often much slower than other drives, so performance may be suffering."
                  $global:tempFileCount++
@@ -53,17 +57,17 @@ function Get-ServerDiagnostics {
                  $MSDbExist ="Exists: Putting system databases on the C drive runs the risk of crashing the server when it runs out of space."
              }
         }
-        if(tempFileCount -GT 1){
+        if($empFileCount -GT 1){
             $tempdbMoreThanOneFile = "TempDB is only configured with one data file. More data files are usually required to alleviate SGAM contention"
         }
         else{
             $tempdbMoreThanOneFile = "TempDB is configured with more than one data file. More data files are usually required to alleviate SGAM contention"
         }
-        $output += "tempDbExist: $tempDbExist"
-        $output += "modelDbExist: $modelDbExist"
-        $output += "masterDbExist: $masterDbExist"
-        $output += "MSDbExist: $MSDbExist"
-        $output += "tempdbMoreThanOneFile: $tempdbMoreThanOneFile"
+        $output += "`n tempDbExist: $tempDbExist"
+        $output += "`n modelDbExist: $modelDbExist"
+        $output += "`n masterDbExist: $masterDbExist"
+        $output += "`n MSDbExist: $MSDbExist"
+        $output += "`n tempdbMoreThanOneFile: $tempdbMoreThanOneFile"
         
         $backupFolder = $server.Settings.BackupDirectory        
 
@@ -87,10 +91,10 @@ function Get-ServerDiagnostics {
             }
         }
 
-        $output += "modelback: $modelback"
-        $output += "masterback: $masterback"
-        $output += "msdbback: $msdbback"
-        $output += "dbback: $dbback"
+        $output += "`n modelback: $modelback"
+        $output += "`n masterback: $masterback"
+        $output += "`n msdbback: $msdbback"
+        $output += "`n dbback: $dbback"
 
 
         $DbIntegrityCheckDate = $server.Databases[3].ExecuteWithResults("DBCC DBINFO () WITH TABLERESULTS").Tables[0] | Where-Object {$_.Field -eq "dbi_dbccLastKnownGood"}  | Select-Object Value
@@ -103,7 +107,7 @@ function Get-ServerDiagnostics {
         else{
             $DbIntegrityCheck = "DBCC CHECKDB (Database Integrity check) completed successfully in before 2 weeks"
         }
-        $output+= "DbIntegrityCheck: $DbIntegrityCheck"
+        $output+= "`n DbIntegrityCheck: $DbIntegrityCheck"
     }
     End {
         return $output | Format-List

@@ -26,6 +26,10 @@ function Get-SSASConfiguration {
         
     }
     Process {   
+        $WindowsVersion = (systeminfo | Select-String 'OS Version:')[0].ToString().Split(':')[1].Trim()
+        $output += "`n `nWindows Server:" + $env:COMPUTERNAME
+        $output += "`n `nWindows Version:" + $WindowsVersion
+
         $ssasInstanceName = "localhost"
         $loadAssembly = [System.Reflection.Assembly]::LoadWithPartialName("Microsoft.AnalysisServices")
         $svr = New-Object Microsoft.AnalysisServices.Server
