@@ -33,6 +33,7 @@ function Get-IIsConfiguration
         $WindowsVersion = (systeminfo | Select-String 'OS Version:')[0].ToString().Split(':')[1].Trim()
         $output += "`nWindows Version:" + $WindowsVersion
         Import-Module servermanager
+        
         # $installDetails = Get-WindowsFeature -ComputerName $server_name
         # Get-WindowsOptionalFeature -Online | where { ($_.FeatureName -like “IIS-*”) -AND ($_.State -eq “Enabled”) }
         # Get-WindowsOptionalFeature -Online | where { ($_.FeatureName -like "IIS-*") }

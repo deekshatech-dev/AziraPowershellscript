@@ -34,7 +34,8 @@ function Get-MachineDetails {
         $server_name = $env:COMPUTERNAME
 
         $WindowsVersion = (systeminfo | Select-String 'OS Version:')[0].ToString().Split(':')[1].Trim()
-        $output += "`n `nWindows Version:" + $WindowsVersion
+        $output += "`nWindows Server:" + $server_name
+        $output += "`nWindows Version:" + $WindowsVersion
         $SqlProductDetails = Invoke-SqlCmd -query "select @@version" -ServerInstance "localhost"
         $output += "`n SqlProductDetails: $SqlProductDetails"
 
