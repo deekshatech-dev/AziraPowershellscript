@@ -12,22 +12,19 @@
     DateCreated: 14th Oct 2020
 #>
 
-function Get-IIsConfiguration
-{
+function Get-IIsConfiguration {
     
     Param
     (
-       # [Parameter(Mandatory=$false)]
+        # [Parameter(Mandatory=$false)]
         #$RemoteComputerName
     )
 
-    Begin
-    {
-        $output=""
+    Begin {
+        $output = ""
         $totalspace = 0
     }
-    Process
-    {   
+    Process {   
         $server_name = $env:COMPUTERNAME
 
         $WindowsVersion = (systeminfo | Select-String 'OS Version:')[0].ToString().Split(':')[1].Trim()
@@ -35,11 +32,45 @@ function Get-IIsConfiguration
         Import-Module servermanager
         
         # $installDetails = Get-WindowsFeature -ComputerName $server_name
-        # Get-WindowsOptionalFeature -Online | where { ($_.FeatureName -like “IIS-*”) -AND ($_.State -eq “Enabled”) }
         # Get-WindowsOptionalFeature -Online | where { ($_.FeatureName -like "IIS-*") }
+        $features = Get-WindowsOptionalFeature -Online | where { ($_.FeatureName -like “IIS-*”) -AND ($_.State -eq “Enabled”) }
+        $FTPfeatures = Get-WindowsOptionalFeature -Online | where { ($_.FeatureName -like “IIS-FTP*”) -AND ($_.State -eq “Enabled”) }
+        $totalfeatures = Get-WindowsOptionalFeature -Online | where { ($_.FeatureName -like "IIS-*") }
+        $runningWebservices = ($features.Length - $FTPfeatures.Length).ToString() + " of " + ($totalfeatures.Length).ToString() + " Installed"
+        $output += "`n Web Server IIS Role and Sub Features except FTP: $runningWebservices"
+
+        $dotNet35 = Get-WindowsOptionalFeature -Online | where { ($_.FeatureName -like “NETFx3”) } | select -Property State
+        if ($dotNet35.State -like "Enabled") {
+            $output += "`n .NET Framework 3.5 including all sub-features are INSTALLED"
+        }
+        else {
+            $output += "`n .NET Framework 3.5 including all sub-features are NOT INSTALLED"
+        }
+
+        $dotNet45 = Get-WindowsOptionalFeature -Online | where { ($_.FeatureName -like “NetFx4-*”) } | select -Property State
+        if ($dotNet45.State -like "Enabled") {
+            $output += "`n .NET Framework 4.5 including all sub-features are INSTALLED"
+        }
+        else {
+            $output += "`n .NET Framework 4.5 including all sub-features are NOT INSTALLED"
+        }
+
+        $windowsProcessActivationService = Get-WindowsOptionalFeature -Online | where { ($_.FeatureName -like "WAS-WindowsActivationService") } | select -Property State
+        if ($windowsProcessActivationService.State -like "Enabled") {
+            $output += "`n Windows Process Activation Service is INSTALLED"
+        }
+        else {
+            $output += "`n Windows Process Activation Service is NOT INSTALLED"
+        }
+        $windowsHostableWebCore = Get-WindowsOptionalFeature -Online | where { ($_.FeatureName -like "Web-WHC") }
+        if ($windowsHostableWebCore.State -like "Enabled") {
+            $output += "`n Hostable Web Core is INSTALLED"
+        }
+        else {
+            $output += "`n Hostable Web Core is NOT INSTALLED"
+        }
     }
-    End
-    {
+    End {
         return $output | Format-List
     }
 }

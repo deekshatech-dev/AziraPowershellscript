@@ -34,8 +34,7 @@ function Get-MachineDetails {
         $server_name = $env:COMPUTERNAME
 
         $WindowsVersion = (systeminfo | Select-String 'OS Version:')[0].ToString().Split(':')[1].Trim()
-        $output += "`nWindows Server:" + $server_name
-        $output += "`nWindows Version:" + $WindowsVersion
+        $output += "`n `nWindows Version:" + $WindowsVersion
         $SqlProductDetails = Invoke-SqlCmd -query "select @@version" -ServerInstance "localhost"
         $output += "`n SqlProductDetails: $SqlProductDetails"
 
@@ -55,14 +54,46 @@ function Get-MachineDetails {
         $output += "`n SqlEdition: $SqlEdition"
         $dbCollationName = $server.Information.Collation
         $output += "`n dbCollationName: $dbCollationName"
-        $sql_services = Get-WmiObject -Query "select * from win32_service where PathName like '%%sqlservr.exe%%'" -ComputerName "$server_name" -ErrorAction Stop
+        $CLR = "v" + $PSVersionTable.CLRVersion.Major.ToString() + "." + $PSVersionTable.CLRVersion.Minor.ToString() + "." + $PSVersionTable.CLRVersion.Build.ToString()
+        $output += "`n CLR Version $CLR"
 
+        $sql_services = Get-WmiObject -Query "select * from win32_service where PathName like '%%sqlservr.exe%%'" -ComputerName "$server_name" -ErrorAction Stop
+        $processID = $sql_services[0].ProcessID
+        $SQLPort = (((netstat -ano | findstr $processID)[0].ToString().Split('') | where { $_ -ne "" })[1].Split(":"))[1]
+        
+        $output += "`n PORT: $SQLPort"
+        $CPUCore = (Get-CIMInstance -Class 'CIM_Processor').NumberOfCores
+        $RAM = (systeminfo | Select-String 'Total Physical Memory:').ToString().Split(':')[1].Trim()
+        
+        $ServerName = $env:COMPUTERNAME
+        $drives = Get-WmiObject Win32_LogicalDisk -ComputerName $ServerName | Select -Property Size
+        $output += "Server Name : " + $ServerName
+        foreach ($drive  in $drives) {
+            $drivename = $drive. -split ":"
+            if (($drivename -ne "A") -and ($drivename -ne "B")) {
+                $totalspace += [int]($drive.Size / 1GB)
+            }
+        }
+        $RAMGB = [int]($RAM.Split(' ')[0].Trim() / 1024) 
+
+        $output += "`nRecommended [SQL Server] : CPUCore=" + $CPUCore + ",RAM=" + $RAMGB + " GB,DISK=" + $totalspace + " GB"
+
+        $sqlHardwareDetails = (Test-DbaMaxDop -SqlInstance NOOBITAXD | Select-Object *)[0]
+        $dbMaxDOP = $sqlHardwareDetails.DatabaseMaxDop
+        $output += "`n Max DOP: $dbMaxDOP"
+        $NumaNodes = $sqlHardwareDetails.NumaNodes
+        $output += "`n NUMA Nodes: $NumaNodes"
+        $costThresholdDOP = Invoke-Sqlcmd -Query "SELECT value FROM sys.configurations WITH (NOLOCK) WHERE name IN ('cost threshold for parallelism')"
+        $output += "`n Cost of Threshold DOP: $costThresholdDOP"
+        
+        $ServerType = Get-WmiObject -ComputerName $ServerName -class Win32_ComputerSystem | Select -Property Model
+        $output += "`n Server TYPE: $ServerType"
         $dbName = "PowershellDB"
         $output += "`n dbName: $dbName"
         $server = New-Object ('Microsoft.SqlServer.Management.Smo.Server') "LOCALHOST"
 
         $isDatabaseMailEnabled = $server.Configuration.DatabaseMailEnabled.ConfigValue
-        $output += "`n isDatabaseMailEnabled: isDatabaseMailEnabled"
+        $output += "`n isDatabaseMailEnabled: $isDatabaseMailEnabled"
         $databaseMailStatus = $server.Configuration.DatabaseMailEnabled.RunValue
         $output += "`n databaseMailStatus: $databaseMailStatus"
         $FileStreamConfigLevel = $server.Configuration.FilestreamAccessLevel.ConfigValue
@@ -110,7 +141,7 @@ function Get-MachineDetails {
                     $ldfsize = ( $file.Length / 1000000 ).ToString() + " MB"
                     $output += "`n LDFSize: $ldfsize"
                 }
-                else{
+                else {
 
                 }
                 
@@ -146,4 +177,5 @@ function Get-MachineDetails {
     }
 }
 
+Get-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetails
 Get-MachineDetails
