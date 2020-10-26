@@ -59,7 +59,13 @@ function Get-MachineDetails {
 
         $sql_services = Get-WmiObject -Query "select * from win32_service where PathName like '%%sqlservr.exe%%'" -ComputerName "$server_name" -ErrorAction Stop
         $processID = $sql_services[0].ProcessID
-        $SQLPort = (((netstat -ano | findstr $processID)[0].ToString().Split('') | where { $_ -ne "" })[1].Split(":"))[1]
+
+        if ($processID -ne "") {
+            $SQLPort = (((netstat -ano | findstr $processID)[0].ToString().Split('') | where { $_ -ne "" })[1].Split(":"))[1]
+        }
+        else {
+            $SQLPort = "N/A"
+        }
         
         $output += "`n PORT: $SQLPort"
         $CPUCore = (Get-CIMInstance -Class 'CIM_Processor').NumberOfCores
