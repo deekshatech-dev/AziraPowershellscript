@@ -96,7 +96,6 @@ function Get-MachineDetails {
         $dbName = "PowershellDB"
         $output += "`n dbName: $dbName"
         $server = New-Object ('Microsoft.SqlServer.Management.Smo.Server') "LOCALHOST"
-
         $isDatabaseMailEnabled = $server.Configuration.DatabaseMailEnabled.ConfigValue
         $output += "`n isDatabaseMailEnabled: $isDatabaseMailEnabled"
         $databaseMailStatus = $server.Configuration.DatabaseMailEnabled.RunValue

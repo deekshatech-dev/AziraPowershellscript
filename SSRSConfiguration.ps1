@@ -22,7 +22,9 @@ function Get-SSRSConiguration {
 
     Begin {
         $output = ""
-        $v = 12
+        $v = 14
+        $folderName = "/MyReportFolder"
+
         # Import-Module SQLPS
     }
     Process {   
@@ -35,26 +37,64 @@ function Get-SSRSConiguration {
         
         $folder = $server.Information.MasterDBLogPath
         # $folder
+       
 
         $rs = (Get-WmiObject -namespace root\Microsoft\SqlServer\ReportServer  -class __Namespace).Name
         $nspace = "root\Microsoft\SQLServer\ReportServer\$rs\v$v\Admin"
         $RSServers = Get-WmiObject -Namespace $nspace -class MSReportServer_ConfigurationSetting -ComputerName $servername -ErrorVariable perror -ErrorAction SilentlyContinue
-        
+        $WebPortalUrl
         foreach ($r in $RSServers) {
-    
+            $folder = $server.Information.MasterDBLogPath
+
             $ssrsInstanceName = $r.InstanceName
             $output += "`n ssrsInstanceName: $ssrsInstanceName"
             $ssrsVers = $r.version
             $output += "`n ssrsVers: $ssrsVers; SQL Version: $serverVersion"
             $ssrsDB = $r.DatabaseName
             # $output += "`n ssrsDB: $ssrsDB"
-            # $vPath = $r.VirtualDirectoryReportServer
-            # $output += "`n vPath: $vPath"
-            $urls = $r.ListReservedUrls() 
+            $vPath = $r.VirtualDirectoryReportServer
+            $urls = $r.ListReservedUrls()
             $urls = $urls.UrlString[0]
-            $urls = $urls.Replace('+', $servername) + "/$vPath"
-            $output += "`n urls: $urls "
-            
+            $WebPortalUrl = $urls.Replace('+', $servername) + "/$vPath"
+            $output += "`n WEB Service URL: $WebPortalUrl"
+
+            $ReportServerUri = $WebPortalUrl + "/ReportService2010.asmx"
+            $InheritParent = $true
+     
+            $rsProxy = New-WebServiceProxy -Uri $ReportServerUri -UseDefaultCredential
+            $items = $rsProxy.GetPolicies($folderName, [ref]$InheritParent)
+            $contentManagers = ""
+            foreach ($item in $items) {
+                if ($item.Roles.Name -eq "Content Manager") {
+                    $contentManagers += $item.GroupUserName + ","
+                }
+            }
+            $output += "`n Content Managers: $contentManagers"
+
+            if ($r.VirtualDirectoryReportManager -ne "") {
+                $reportManagerUrl = $urls.Replace('+', $servername) + "/" + $r.VirtualDirectoryReportManager
+            }
+            else {
+                $reportManagerUrl = $urls.Replace('+', $servername) + "/Reports"
+            }
+            $output += "`n Report Manager URL: $reportManagerUrl"
+            $SecureConnectionLevel = $r.SecureConnectionLevel
+            $output += "`n Secure Connection Level: $SecureConnectionLevel"
+
+            $SenderEmailAddress = $r.SenderEmailAddress
+            if ($SenderEmailAddress -ne "") {
+                $output += "`n E-Mail Setting: $SenderEmailAddress"
+            }
+            else {
+                $output += "`n E-Mail Setting: N/A"
+            }
+            $execAccount = $r.UnattendedExecutionAccount
+            if ($execAccount -ne "") {
+                $output += "`n Execution Account: $execAccount"
+            }
+            else {
+                $output += "`n SSRS Excution account is not configured"
+            }
             $ssrsDBmdfPath = $folder + "\" + $ssrsDB + ".mdf"
             $output += "`n ssrsDBmdfPath: $ssrsDBmdfPath"
             $ssrsDBldfPath = $folder + "\" + $ssrsDB + "_log.ldf"
@@ -83,6 +123,7 @@ function Get-SSRSConiguration {
                 $output += "`n ssrsTempDBldfSize: $ssrsTempDBldfSize"
             }
         }
+        
     }
     End {
         return $output | Format-List
