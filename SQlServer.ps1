@@ -26,10 +26,9 @@ function Get-MachineDetails {
         
     }
     Process {   
-        #        Install-Module SqlServer -AllowClobber
-        
+        # Install-Module SqlServer -AllowClobber
         # Import-Module SQLPS
-        Import-Module SqlServer
+        # Import-Module SqlServer
 
         $server_name = $env:COMPUTERNAME
 
@@ -182,6 +181,4 @@ function Get-MachineDetails {
         return $output | Format-List
     }
 }
-
-Get-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetailsGet-MachineDetails
 Get-MachineDetails

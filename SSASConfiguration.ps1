@@ -38,8 +38,7 @@ function Get-SSASConfiguration {
         $instanceName = "localhost"
         $server = New-Object -TypeName Microsoft.SqlServer.Management.Smo.Server -ArgumentList $instanceName
         $serverVersion = $server.Information.VersionString
-        $output += "`nssqlVersion: $serverVersion"
-
+        
         # To create a new DB
         # $svr.databases.add("SSASDB")
         # $DB = $svr.databases.item("SSASDB")
@@ -47,8 +46,19 @@ function Get-SSASConfiguration {
         # $DB.description = "Testing SSAS DB addition"
         # $DB.update()
 
-
+        $databaseRoles = $svr.Databases[0].Roles
+        $admins
+        foreach ($role in $databaseRoles) {
+            if ($role.Name -eq "Administrator") {
+                $admins = $role.Members.ToString()
+            }
+        }
+        
+        $output += "`n Administrator: $admins"
+        
+        # $output += "`n Roles: $roles"
         $ssasVersion = $svr.Version
+        $output += "`n SSAS Version: $ssasVersion | ssqlVersion: $serverVersion "
         $output += "`nssasVersion: $ssasVersion"
         $ssasServerMode = $svr.ServerMode
         $output += "`nssasServerMode: $ssasServerMode"
