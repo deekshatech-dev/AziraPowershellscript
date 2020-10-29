@@ -64,6 +64,34 @@ function Get-MachineDetails {
         $output += "`nIs 64 Bit Process:" + $is64BitProcess
         $output += "`nDomain:" + $domain
         $output += "`nTotal Physical Memory:" + $RAMGB + " GB"
+
+        $enabledProtocols = [enum]::GetNames([Net.SecurityProtocolType])
+        $ssl2 = "Disabled"
+        $ssl3 = "Disabled"
+        $tls = "Disabled"
+        $tls11 = "Disabled"
+        $tls12 = "Disabled"
+        if ($enabledProtocols -contains 'Ssl2') {
+            $ssl2 = "Enabled"
+        }
+
+        if ($enabledProtocols -contains 'Ssl3') {
+            $ssl3 = "Enabled"
+        }
+        if ($enabledProtocols -contains 'Tls') {
+            $tls = "Enabled"
+        }
+        if ($enabledProtocols -contains 'Tls11') {
+            $tls11 = "Enabled"
+        } 
+        if ($enabledProtocols -contains 'Tls12') {
+            $tls12 = "Enabled"
+        } 
+        $output += "`nSecurity [Client SSL 2.0] Is Client SSL 2.0 is " + $ssl2
+        $output += "`nSecurity [Client SSL 3.0] Is Client SSL 3.0 is " + $ssl3
+        $output += "`nSecurity [Client TLS 1.0] Is Client TLS 1.0 is " + $tls
+        $output += "`nSecurity [Client TLS 1.1] Is Client TLS 1.1 is " + $tls11
+        $output += "`nSecurity [Client TLS 1.2] Is Client TLS 1.2 is " + $tls12
     }
     End {
         return $output | Format-List

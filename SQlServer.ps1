@@ -11,7 +11,6 @@
     Version: 0.1 
     DateCreated: 14th Oct 2020
 #>
-
 function Get-MachineDetails {
     
     Param
@@ -33,9 +32,33 @@ function Get-MachineDetails {
         $server_name = $env:COMPUTERNAME
 
         $WindowsVersion = (systeminfo | Select-String 'OS Version:')[0].ToString().Split(':')[1].Trim()
-        $output += "`n `nWindows Version:" + $WindowsVersion
+        $output += "`n Windows Version:" + $WindowsVersion
         $SqlProductDetails = Invoke-SqlCmd -query "select @@version" -ServerInstance "localhost"
         $output += "`n SqlProductDetails: $SqlProductDetails"
+
+        $used = (Get-PSDrive C | Select-Object Used).Used / 1MB
+        $free = (Get-PSDrive C | Select-Object Free).Free / 1MB
+        $output += "`n Hard Drive C Drive: [" + $used + "/" + $free + "]"
+        
+        $UsedMemorybySql = Invoke-SqlCmd -Query "SELECT physical_memory_in_use_kb/1024 AS sqlusedmemory FROM sys.dm_os_process_memory;"  
+        $output += "`n Total Memory In Use: " + $UsedMemorybySql.sqlusedmemory + "MB"
+        $availableMemorybySql = Invoke-SqlCmd -Query "SELECT available_commit_limit_kb/1024 AS sqlavailmemory FROM sys.dm_os_process_memory;"
+        $totalMemoryforSQL = $availableMemorybySql.sqlavailmemory + $UsedMemorybySql.sqlusedmemory
+        $output += "`n Total Memory Allocated: " + $totalMemoryforSQL + "MB"
+
+        $allDriveSpace = Get-WmiObject -Class win32_logicaldisk -ComputerName $server_name
+    
+        $totalAvailableSpace = 0;
+        $totalSpace = 0;
+    
+        foreach ($drive in $allDriveSpace) {
+            $totalAvailableSpace += $drive.FreeSpace
+            $totalSpace += $drive.Size
+        }
+        $totalAvailableSpace = $totalAvailableSpace / 1MB 
+        $totalSpace = $totalSpace / 1MB
+        $output += "`n Available Physical Memory: $totalAvailableSpace"
+        $output += "`n Total Physical Memory: $totalSpace"
 
         $instanceName = "localhost"
         $server = New-Object -TypeName Microsoft.SqlServer.Management.Smo.Server -ArgumentList $instanceName
@@ -45,8 +68,6 @@ function Get-MachineDetails {
         $output += "`n productLevel: $productLevel"
         $FullTextSearchEnabled = $server.Information.IsFullTextInstalled
         $output += "`n FullTextSearchEnabled: $FullTextSearchEnabled"
-        $TotalPhysicalMemory = $server.Information.PhysicalMemory
-        $output += "`n TotalPhysicalMemory: $TotalPhysicalMemory"
         $SqlLanguage = $server.Information.Language
         $output += "`n SqlLanguage: $SqlLanguage"
         $SqlEdition = $server.Information.Edition
@@ -72,7 +93,7 @@ function Get-MachineDetails {
         
         $ServerName = $env:COMPUTERNAME
         $drives = Get-WmiObject Win32_LogicalDisk -ComputerName $ServerName | Select -Property Size
-        $output += "Server Name : " + $ServerName
+        $output += "`n Server Name : " + $ServerName
         foreach ($drive  in $drives) {
             $drivename = $drive. -split ":"
             if (($drivename -ne "A") -and ($drivename -ne "B")) {
@@ -81,7 +102,7 @@ function Get-MachineDetails {
         }
         $RAMGB = [int]($RAM.Split(' ')[0].Trim() / 1024) 
 
-        $output += "`nRecommended [SQL Server] : CPUCore=" + $CPUCore + ",RAM=" + $RAMGB + " GB,DISK=" + $totalspace + " GB"
+        $output += "`n Recommended [SQL Server] : CPUCore=" + $CPUCore + ",RAM=" + $RAMGB + " GB,DISK=" + $totalspace + " GB"
 
         $sqlHardwareDetails = (Test-DbaMaxDop -SqlInstance NOOBITAXD | Select-Object *)[0]
         $dbMaxDOP = $sqlHardwareDetails.DatabaseMaxDop
@@ -120,7 +141,6 @@ function Get-MachineDetails {
         }
 
         $folder = $server.Information.MasterDBLogPath
-        # $folder
         $authenticationMode = $server.Settings.LoginMode
         $output += $authenticationMode
         foreach ($file in Get-ChildItem $folder) {
@@ -150,27 +170,7 @@ function Get-MachineDetails {
                 }
                 
             }
-
-
-            # if ($file.Name -eq $dbName + ".mdf") {
-            #     $DbMdfFilePath = $folder + "\" + $file.Name
-            #     $output += "`n DbMdfFilePath: $DbMdfFilePath"
-            #     $DbMdfFileSize = ( $file.Length / 1000000 ).ToString() + " MB"
-            #     $output += "`n DbMdfFilePath: $DbMdfFileSize"
-            # }
-            # if ($file.Name -eq $dbName + "_log.ldf") {
-            #     $DbLdfFilePath = $folder + "\" + $file.Name
-            #     $output += "`n DbLdfFilePath: $DbLdfFilePath"
-            #     $DbLdfFileSize = ( $file.Length / 1000000 ).ToString() + " MB"
-            #     $output += "`n DbLdfFileSize: $DbLdfFileSize"
-            # }
         }
-        # $creds = Get-SqlLogin -ServerInstance "localhost"
-        # foreach ($cred in $creds) {
-        #     if ($cred.LoginType -ne "Certificate") {
-        #         $cred
-        #     }
-        # }
 
         $backupPath = ($server.Settings.BackupDirectory).ToString() + $dbName + ".bak"
         $output += "`n backupPath: $backupPath"

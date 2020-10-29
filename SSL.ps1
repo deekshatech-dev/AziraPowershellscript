@@ -38,47 +38,73 @@
    Tls11              : True
    Tls12              : True
  #>
- function Test-SslProtocols {
-    param(
+function Test-SslProtocols {
+  param(
     #   [Parameter(Mandatory=$true,ValueFromPipelineByPropertyName=$true,ValueFromPipeline=$true)]
     #   $ComputerName,
       
-      [Parameter(ValueFromPipelineByPropertyName=$true)]
-      [int]$Port = 443
-    )
-    begin {
-      $ComputerName = $env:COMPUTERNAME
-      $ProtocolNames = [System.Security.Authentication.SslProtocols] | gm -static -MemberType Property | ?{$_.Name -notin @("Default","None")} | %{$_.Name}
-    }
-    process {
-      $ProtocolStatus = [Ordered]@{}
-      $ProtocolStatus.Add("ComputerName", $ComputerName)
-      $ProtocolStatus.Add("Port", $Port)
-      
-      $ProtocolNames | %{
-        $ProtocolName = $_
-        $Socket = New-Object System.Net.Sockets.Socket([System.Net.Sockets.SocketType]::Stream, [System.Net.Sockets.ProtocolType]::Tcp)
-        $Socket.Connect($ComputerName, $Port)
-        try {
-          $NetStream = New-Object System.Net.Sockets.NetworkStream($Socket, $true)
-          $SslStream = New-Object System.Net.Security.SslStream($NetStream, $true)
-          $SslStream.AuthenticateAsClient($ComputerName,  $null, $ProtocolName, $false)
-          $RemoteCertificate = [System.Security.Cryptography.X509Certificates.X509Certificate2]$SslStream.RemoteCertificate
-          $ProtocolStatus["KeyLength"] = $RemoteCertificate.PublicKey.Key.KeySize
-          $ProtocolStatus["SignatureAlgorithm"] = $RemoteCertificate.SignatureAlgorithm.FriendlyName
-          $ProtocolStatus["Certificate"] = $RemoteCertificate
-          $ProtocolStatus.Add($ProtocolName, $true)
-        } catch  {
-          $ProtocolStatus.Add($ProtocolName, $false)
-        } finally {
-          $SslStream.Close()
-        }
-      }
-      [PSCustomObject]$ProtocolStatus
-    }
-    # End
-    # {
-    #     return $ProtocolStatus | Format-List
-    # }
+    [Parameter(ValueFromPipelineByPropertyName = $true)]
+    [int]$Port = 443
+  )
+  begin {
+    $ComputerName = $env:COMPUTERNAME
+    $ProtocolNames = [System.Security.Authentication.SslProtocols] | gm -static -MemberType Property | ? { $_.Name -notin @("Default", "None") } | % { $_.Name }
   }
-  Test-SslProtocols
+  process {
+    $ProtocolStatus = [Ordered]@{}
+    $ProtocolStatus.Add("ComputerName", $ComputerName)
+    $ProtocolStatus.Add("Port", $Port)
+      
+    $ProtocolNames
+
+    $enabledProtocols = [enum]::GetNames([Net.SecurityProtocolType])
+    if ($enabledProtocols -contains 'Ssl2') {
+      $out
+    }
+    if ($enabledProtocols -contains 'Ssl3') {
+      
+    }
+    if ($enabledProtocols -contains 'Tls') {
+      
+    }
+    if ($enabledProtocols -contains 'Tls10') {
+      
+    } 
+    if ($enabledProtocols -contains 'Tls11') {
+      
+    } 
+    if ($enabledProtocols -contains 'Tls12') {
+      
+    } 
+    if ($enabledProtocols -contains 'Tls13') {
+      
+    }
+    
+    
+    # $ProtocolNames | %{
+    #   $ProtocolName = $_
+    #   $Socket = New-Object System.Net.Sockets.Socket([System.Net.Sockets.SocketType]::Stream, [System.Net.Sockets.ProtocolType]::Tcp)
+    #   $Socket.Connect($ComputerName, $Port)
+    #   try {
+    #     $NetStream = New-Object System.Net.Sockets.NetworkStream($Socket, $true)
+    #     $SslStream = New-Object System.Net.Security.SslStream($NetStream, $true)
+    #     $SslStream.AuthenticateAsClient($ComputerName,  $null, $ProtocolName, $false)
+    #     $RemoteCertificate = [System.Security.Cryptography.X509Certificates.X509Certificate2]$SslStream.RemoteCertificate
+    #     $ProtocolStatus["KeyLength"] = $RemoteCertificate.PublicKey.Key.KeySize
+    #     $ProtocolStatus["SignatureAlgorithm"] = $RemoteCertificate.SignatureAlgorithm.FriendlyName
+    #     $ProtocolStatus["Certificate"] = $RemoteCertificate
+    #     $ProtocolStatus.Add($ProtocolName, $true)
+    #   } catch  {
+    #     $ProtocolStatus.Add($ProtocolName, $false)
+    #   } finally {
+    #     $SslStream.Close()
+    #   }
+    # }
+    # [PSCustomObject]$ProtocolStatus
+  }
+  # End
+  # {
+  #     return $ProtocolStatus | Format-List
+  # }
+}
+Test-SslProtocols
