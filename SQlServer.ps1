@@ -101,8 +101,15 @@ function Get-MachineDetails {
             }
         }
         $RAMGB = [int]($RAM.Split(' ')[0].Trim() / 1024) 
-
         $output += "`n Recommended [SQL Server] : CPUCore=" + $CPUCore + ",RAM=" + $RAMGB + " GB,DISK=" + $totalspace + " GB"
+
+        $sysInfo = Invoke-Sqlcmd -Query "SELECT * FROM sys.dm_os_sys_info"
+
+        $sockets = $sysInfo.socket_count
+        $coresPerSocket = $sysInfo.cores_per_socket
+        $logicalProcessors = (Get-CimInstance Win32_ComputerSystem) | Select  NumberOfLogicalProcessors
+        $sqlLicense = "SQL Server detected" + $sockets + "sockets with" + $coresPerSocket + "cores per socket and" + $logicalProcessors + "logical processors per socket," + $logicalProcessors + "total logical processors; using 4 logical processors based on SQL Server licensing."
+        $output += "`n SQL License: $sqlLicense"
 
         $sqlHardwareDetails = (Test-DbaMaxDop -SqlInstance NOOBITAXD | Select-Object *)[0]
         $dbMaxDOP = $sqlHardwareDetails.DatabaseMaxDop
