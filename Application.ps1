@@ -43,8 +43,8 @@ function Get-MachineDetails {
         }
         $totalCpuCount = Invoke-Sqlcmd -Query "SELECT i.cpu_count from sys.dm_os_sys_info i"
 
-        $output += "`n Total CPU Count $totalCpuCount"
-        $output += "`n Last Update Dates $UpdateDateObject"
+        $output += "`nTotal CPU Count $totalCpuCount"
+        $output += "`nLast Update Dates $UpdateDateObject"
 
         $WindowsVersion = (systeminfo | Select-String 'OS Version:')[0].ToString().Split(':')[1].Trim()
         $is64BitOS = [System.Environment]::Is64BitOperatingSystem
@@ -106,4 +106,54 @@ Function Get-FileName() {
     $OpenFileDialog.ShowDialog()
     $OpenFileDialog.filename
 }
+
+function Test-ServerSSLSupport {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$HostName = $args[0],
+        [string]$port = 443
+    )
+    process {
+        $RetValue = New-Object psobject -Property @{
+            Host          = $HostName
+            Port          = $port
+            SSLv2         = $false
+            SSLv3         = $false
+            TLSv1_0       = $false
+            TLSv1_1       = $false
+            TLSv1_2       = $false
+            KeyExhange    = $null
+            HashAlgorithm = $null
+        }
+        "ssl2", "ssl3", "tls", "tls11", "tls12" | % {
+            $TcpClient = New-Object Net.Sockets.TcpClient
+            $TcpClient.Connect($RetValue.Host, $RetValue.Port)
+            $SslStream = New-Object Net.Security.SslStream $TcpClient.GetStream()
+            $SslStream.ReadTimeout = 15000
+            $SslStream.WriteTimeout = 15000
+            try {
+                $SslStream.AuthenticateAsClient($RetValue.Host, $null, $_, $false)
+                $RetValue.KeyExhange = $SslStream.KeyExchangeAlgorithm
+                $RetValue.HashAlgorithm = $SslStream.HashAlgorithm
+                $status = $true
+            }
+            catch {
+                $status = $false
+            }
+            switch ($_) {
+                "ssl2" { $RetValue.SSLv2 = $status }    
+                "ssl3" { $RetValue.SSLv3 = $status }    
+                "tls" { $RetValue.TLSv1_0 = $status }    
+                "tls11" { $RetValue.TLSv1_1 = $status }    
+                "tls12" { $RetValue.TLSv1_2 = $status }    
+            }
+
+        }
+        # $RetValue 
+    }
+}
+
+Test-ServerSSLSupport 
 Get-MachineDetails

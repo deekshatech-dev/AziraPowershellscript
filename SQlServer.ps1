@@ -5,6 +5,7 @@
    The tool will ask for file(containing servers name) and folder(where the output will be saved as ServerrInventory.csv.
 .EXAMPLE
    It is tool, and has forms and buttons to help you.
+
 .NOTES    
     Author: Prashant kankhara
     Email : prashantkankhara@gmail.com
@@ -13,10 +14,15 @@
 #>
 function Get-MachineDetails {
     
+    <#
+        .PARAMETER database
+            Sets name of the Database you want details of.
+    #>
     Param
     (
-        # [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         #$RemoteComputerName
+        [string]$database = $args[0]
     )
 
     Begin {
@@ -121,8 +127,8 @@ function Get-MachineDetails {
         
         $ServerType = Get-WmiObject -ComputerName $ServerName -class Win32_ComputerSystem | Select -Property Model
         $output += "`n Server TYPE: $ServerType"
-        $dbName = "PowershellDB"
-        $output += "`n dbName: $dbName"
+
+        $output += "`n dbName: $database"
         $server = New-Object ('Microsoft.SqlServer.Management.Smo.Server') "LOCALHOST"
         $isDatabaseMailEnabled = $server.Configuration.DatabaseMailEnabled.ConfigValue
         $output += "`n isDatabaseMailEnabled: $isDatabaseMailEnabled"
@@ -132,12 +138,27 @@ function Get-MachineDetails {
         $output += "`n FileStreamConfigLevel: $FileStreamConfigLevel"
         $FileStreamAccessLevel = $server.Configuration.FilestreamAccessLevel.RunValue
         $output += "`n FileStreamAccessLevel: $FileStreamAccessLevel"
+        $FileStreamFileSize = 0;
+        $FileStreamFilePath = "Filestream Not enabled in DB.";
+
+        if ($FileStreamConfigLevel -ne 0) {
+            $dbfiles = Invoke-Sqlcmd -Query "Use $database Select * from sys.database_files;"
+
+            foreach ($file in $dbfiles) {
+                if ($file.type_desc -eq "FILESTREAM") {
+                    $FileStreamFileSize = $file.size
+                    $FileStreamFilePath = $file.physical_name
+                }
+            }
+        }
+        $output += "`n FILESTREAM FILE Path: $FileStreamFilePath"
+        $output += "`n FILESTREAM FILE Size: $FileStreamFileSize"
 
 
         $isClrEnabled = ( Invoke-Sqlcmd -query "SELECT * FROM sys.configurations WHERE name = 'clr enabled'" ).value  
         $output += "`n isClrEnabled: $isClrEnabled"
         foreach ($db in $server.Databases) {
-            if ($db.Name -eq $dbName) {
+            if ($db.Name -eq $database) {
                 $dbRecoveryModel = $db.RecoveryModel
                 $output += "`n dbRecoveryModel: $dbRecoveryModel"
                 $dbCompatibilityLevel = $db.CompatibilityLevel
@@ -179,7 +200,7 @@ function Get-MachineDetails {
             }
         }
 
-        $backupPath = ($server.Settings.BackupDirectory).ToString() + $dbName + ".bak"
+        $backupPath = ($server.Settings.BackupDirectory).ToString() + $database + ".bak"
         $output += "`n backupPath: $backupPath"
 
     }
