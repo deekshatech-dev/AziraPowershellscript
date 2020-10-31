@@ -26,49 +26,57 @@ function Get-SSASConfiguration {
         
     }
     Process {   
-        $WindowsVersion = (systeminfo | Select-String 'OS Version:')[0].ToString().Split(':')[1].Trim()
-        $output += "`n `nWindows Server:" + $env:COMPUTERNAME
-        $output += "`n `nWindows Version:" + $WindowsVersion
-
-        $ssasInstanceName = "localhost"
-        $loadAssembly = [System.Reflection.Assembly]::LoadWithPartialName("Microsoft.AnalysisServices")
-        $svr = New-Object Microsoft.AnalysisServices.Server
-        $svr.Connect($ssasInstanceName)
-        
-        $instanceName = "localhost"
-        $server = New-Object -TypeName Microsoft.SqlServer.Management.Smo.Server -ArgumentList $instanceName
-        $serverVersion = $server.Information.VersionString
-        
-        # To create a new DB
-        # $svr.databases.add("SSASDB")
-        # $DB = $svr.databases.item("SSASDB")
-        # $DB.update()
-        # $DB.description = "Testing SSAS DB addition"
-        # $DB.update()
-
-        $databaseRoles = $svr.Databases[0].Roles
-        $admins
-        foreach ($role in $databaseRoles) {
-            if ($role.Name -eq "Administrator") {
-                $admins = $role.Members.ToString()
+        $erroFile = "./error_log/ssasconfig_" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".txt"
+        try {
+            $WindowsVersion = (systeminfo | Select-String 'OS Version:')[0].ToString().Split(':')[1].Trim()
+            $output += "`n `nWindows Server:" + $env:COMPUTERNAME
+            $output += "`n `nWindows Version:" + $WindowsVersion
+    
+            $ssasInstanceName = "localhost"
+            $loadAssembly = [System.Reflection.Assembly]::LoadWithPartialName("Microsoft.AnalysisServices")
+            $svr = New-Object Microsoft.AnalysisServices.Server
+            $svr.Connect($ssasInstanceName)
+            
+            $instanceName = "localhost"
+            $server = New-Object -TypeName Microsoft.SqlServer.Management.Smo.Server -ArgumentList $instanceName
+            $serverVersion = $server.Information.VersionString
+            
+            # To create a new DB
+            # $svr.databases.add("SSASDB")
+            # $DB = $svr.databases.item("SSASDB")
+            # $DB.update()
+            # $DB.description = "Testing SSAS DB addition"
+            # $DB.update()
+    
+            $databaseRoles = $svr.Databases[0].Roles
+            $admins
+            foreach ($role in $databaseRoles) {
+                if ($role.Name -eq "Administrator") {
+                    $admins = $role.Members.ToString()
+                }
             }
+            
+            $output += "`n Administrator: $admins"
+            
+            # $output += "`n Roles: $roles"
+            $ssasVersion = $svr.Version
+            $output += "`n SSAS Version: $ssasVersion | ssqlVersion: $serverVersion "
+            $output += "`nssasVersion: $ssasVersion"
+            $ssasServerMode = $svr.ServerMode
+            $output += "`nssasServerMode: $ssasServerMode"
+            $ssasCollation = $svr.Collation
+            $output += "`nssasCollation: $ssasCollation"
+            $ssasCubes = $svr.Cubes
+            $output += "`nssasCubes: $ssasCubes"
+            $ssasEdition = $svr.Edition
+            $output += "$ssasEdition"
+            $ssasServerMode = $svr.ServerMode
         }
-        
-        $output += "`n Administrator: $admins"
-        
-        # $output += "`n Roles: $roles"
-        $ssasVersion = $svr.Version
-        $output += "`n SSAS Version: $ssasVersion | ssqlVersion: $serverVersion "
-        $output += "`nssasVersion: $ssasVersion"
-        $ssasServerMode = $svr.ServerMode
-        $output += "`nssasServerMode: $ssasServerMode"
-        $ssasCollation = $svr.Collation
-        $output += "`nssasCollation: $ssasCollation"
-        $ssasCubes = $svr.Cubes
-        $output += "`nssasCubes: $ssasCubes"
-        $ssasEdition = $svr.Edition
-        $output += "$ssasEdition"
-        $ssasServerMode = $svr.ServerMode
+        catch {
+            $err = $_ + $_.ScriptStackTrace 
+            Set-Content -Path $erroFile -Value $err 
+        }
+       
 
     }
     End {
