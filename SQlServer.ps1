@@ -109,6 +109,9 @@ function Get-MachineDetails {
             $RAMGB = [int]($RAM.Split(' ')[0].Trim() / 1024) 
             $output += "`n Recommended [SQL Server] : CPUCore=" + $CPUCore + ",RAM=" + $RAMGB + " GB,DISK=" + $totalspace + " GB"
 
+            $numberFormat = (Invoke-Sqlcmd -Query "select format(987654321.00, 'N', 'en-us' );").Column1
+            $output += "`n Number Format(en-us): $numberFormat"
+
             $sysInfo = Invoke-Sqlcmd -Query "SELECT * FROM sys.dm_os_sys_info"
 
             $sockets = $sysInfo.socket_count
