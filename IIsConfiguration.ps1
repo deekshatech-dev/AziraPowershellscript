@@ -34,7 +34,6 @@ function Get-IIsConfiguration {
             $output += "`nWindows Version:" + $WindowsVersion
         
             # $installDetails = Get-WindowsFeature -ComputerName $server_name
-            Get-WindowsOptionalFeature -Online | where { ($_.FeatureName -like "IIS-*") }
             $features = Get-WindowsOptionalFeature -Online | Where-Object { ($_.FeatureName -like 'IIS-*') -AND ($_.State -eq 'Enabled') };
             $FTPfeatures = Get-WindowsOptionalFeature -Online | Where-Object { ($_.FeatureName -like 'IIS-FTP*') -AND ($_.State -eq "Enabled") };
             $totalfeatures = Get-WindowsOptionalFeature -Online | Where-Object { ($_.FeatureName -like 'IIS-*') };
@@ -71,8 +70,6 @@ function Get-IIsConfiguration {
             else {
                 $output += "`n Hostable Web Core is NOT INSTALLED"
             }
-
-
 
             if (((Get-WebConfigurationProperty -pspath 'MACHINE/WEBROOT/APPHOST' -filter "system.webServer/httpCompression" -Name "dynamicTypes").Collection  | Where-Object { $_.mimeType -eq 'application/json' }).Length -eq 1) {
                 $output += "`n Value - Application/json configured in IIS Configuration Editor->System.WebServer/httpCompression/dynamicTypes"
