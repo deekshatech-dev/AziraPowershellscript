@@ -37,6 +37,9 @@ function Get-SSASConfiguration {
             $svr = New-Object Microsoft.AnalysisServices.Server
             $svr.Connect($ssasInstanceName)
             
+            $ssasConnectionTimeout = $svr.ConnectionInfo.ConnectTimeout
+            $output = "`n ssasConnectionTimeout: $ssasConnectionTimeout"
+
             $instanceName = "localhost"
             $server = New-Object -TypeName Microsoft.SqlServer.Management.Smo.Server -ArgumentList $instanceName
             $serverVersion = $server.Information.VersionString

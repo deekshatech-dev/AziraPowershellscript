@@ -37,7 +37,8 @@ function Get-SSRSConiguration {
         try {
             $server = New-Object -TypeName Microsoft.SqlServer.Management.Smo.Server -ArgumentList $instanceName
             $serverVersion = $server.Information.VersionString
-            
+            $ssrsConnectionTimeout = $server.ConnectionContext.ConnectTimeout 
+            $output += "`n ssrsConnectionTimeout: $ssrsConnectionTimeout"
             $folder = $server.Information.MasterDBLogPath
             # $folder
             
@@ -97,36 +98,30 @@ function Get-SSRSConiguration {
                 else {
                     $output += "`n SSRS Excution account is not configured"
                 }
+
                 $ssrsDBmdfPath = $folder + "\" + $ssrsDB + ".mdf"
                 $output += "`n ssrsDBmdfPath: $ssrsDBmdfPath"
+                $ssrsDBmdfSize = (Get-Item $ssrsDBmdfPath).length / 1MB
+                $output += "`n ssrsDBmdfSize: $ssrsDBmdfSize" + " MB"
+
                 $ssrsDBldfPath = $folder + "\" + $ssrsDB + "_log.ldf"
                 $output += "`n ssrsDBldfPath: $ssrsDBldfPath"
+                $ssrsDBldfSize = (Get-Item $ssrsDBldfPath).length / 1MB
+                $output += "`n ssrsDBmdfSize: $ssrsDBldfSize" + " MB"
                 
-                $ssrsTempDBldfPath = $folder + "\" + $ssrsDB + "TempDB.mdf"
-                $output += "`n ssrsTempDBldfPath: $ssrsTempDBldfPath"
+                $ssrsTempDBmdfPath = $folder + "\" + $ssrsDB + "TempDB.mdf"
+                $output += "`n ssrsTempDBldfPath: $ssrsTempDBmdfPath"
+                $ssrsTempDBmdfSize = (Get-Item $ssrsTempDBmdfPath).length / 1MB
+                $output += "`n ssrsTempDBmdfSize: $ssrsTempDBmdfSize" + " MB"
+
                 $ssrsTempDBldfPath = $folder + "\" + $ssrsDB + "TempDB_log.ldf"
                 $output += "`n ssrsTempDBldfPath: $ssrsTempDBldfPath"
-            }
-            foreach ($file in Get-ChildItem $folder) {
-                if ($file.Name -eq "$ssrsDB.mdf") {
-                    $ssrsDBmdfSize = ($file.Size / 1000000).ToString() + " MB"
-                    $output += "`n ssrsDBmdfSize: $ssrsDBmdfSize"
-                }
-                if ($file.Name -eq "$ssrsDB_log.ldf") {
-                    $ssrsDBldfSize = ($file.Size / 1000000).ToString() + " MB"
-                    $output += "`n ssrsDBldfSize: $ssrsDBldfSize"
-                }
-                if ($file.Name -eq "$ssrsDBTempDB.mdf") {
-                    $ssrsTempDBmdfSize = ($file.Size / 1000000).ToString() + " MB"
-                    $output += "`n ssrsTempDBmdfSize: $ssrsTempDBmdfSize"
-                }
-                if ($file.Name -eq "$ssrsDBTempDB_log.ldf") {
-                    $ssrsTempDBldfSize = ($file.Size / 1000000).ToString() + " MB"
-                    $output += "`n ssrsTempDBldfSize: $ssrsTempDBldfSize"
-                }
+                $ssrsTempDBldfSize = (Get-Item $ssrsTempDBldfPath).length / 1MB
+                $output += "`n ssrsTempDBldfSize: $ssrsTempDBldfSize" + " MB"
             }
         }
         catch {
+            $_
             $err = $_
             $StackTrace = $_.ScriptStackTrace 
             Set-Content -Path $erroFile -Value $err 

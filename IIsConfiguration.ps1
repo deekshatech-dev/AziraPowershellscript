@@ -25,6 +25,7 @@ function Get-IIsConfiguration {
         $totalspace = 0
         # Install-Module servermanager
         # Import-Module servermanager
+        # Import-Module WebAdministration
     }
     Process {   
         $server_name = $env:COMPUTERNAME
@@ -32,14 +33,36 @@ function Get-IIsConfiguration {
         try {
             $WindowsVersion = (systeminfo | Select-String 'OS Version:')[0].ToString().Split(':')[1].Trim()
             $output += "`nWindows Version:" + $WindowsVersion
-            $iisversion = (get-itemproperty HKLM:\SOFTWARE\Microsoft\InetStp\  | select setupstring,versionstring ).versionstring
+            $iisversion = (get-itemproperty HKLM:\SOFTWARE\Microsoft\InetStp\  | select setupstring, versionstring ).versionstring
             $output += "`nIIS Version:" + $iisversion
             $features = Get-WindowsOptionalFeature -Online | Where-Object { ($_.FeatureName -like 'IIS-*') -AND ($_.State -eq 'Enabled') };
+            $featuresList = Get-WindowsOptionalFeature -Online | Where-Object { ($_.FeatureName -like 'IIS-*') -AND ($_.State -eq 'Enabled') } | Select -Property FeatureName; 
             $FTPfeatures = Get-WindowsOptionalFeature -Online | Where-Object { ($_.FeatureName -like 'IIS-FTP*') -AND ($_.State -eq "Enabled") };
             $totalfeatures = Get-WindowsOptionalFeature -Online | Where-Object { ($_.FeatureName -like 'IIS-*') };
             $runningWebservices = ($features.Length - $FTPfeatures.Length).ToString() + " of " + ($totalfeatures.Length).ToString() + " Installed"
             $output += "`n Web Server IIS Role and Sub Features except FTP: $runningWebservices"
+            $output += "`n =============================="
+            $output += "`n Feature List"
+            $output += "`n =============================="
+            $featureNames = ''
+            foreach ($item in $featuresList) {
+                $tempName = $item.FeatureName
+                $featureNames += "`n $tempName"
+            }
+            
+            $output += "`n $featureNames"
+            $output += "`n `n =============================="
 
+            $pspath = "MACHINE/WEBROOT/APPHOST"
+            $filter = "system.applicationHost/sites/siteDefaults/limits"
+            $name = "connectionTimeout"
+            $timeoutObj = Get-WebConfigurationProperty -name $name -filter $filter -pspath $pspath 
+            $timeout = $timeoutObj.Value.TotalSeconds
+            $output += "`n IIS Connection Timeout: $timeout"
+            
+            $IisSites = Get-IISSite | Select -Property Name
+            $output += "`n IIS Hosted Websites: $IisSites"
+            
             $dotNet35 = Get-WindowsOptionalFeature -Online | Where-Object { ($_.FeatureName -like "NETFx3") } | select -Property State
             if ($dotNet35.State -like "Enabled") {
                 $output += "`n .NET Framework 3.5 including all sub-features are INSTALLED"
