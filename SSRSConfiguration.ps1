@@ -127,8 +127,10 @@ function Get-SSRSConiguration {
             }
         }
         catch {
-            $err = $_ + $_.ScriptStackTrace 
+            $err = $_
+            $StackTrace = $_.ScriptStackTrace 
             Set-Content -Path $erroFile -Value $err 
+            Set-Content -Path $erroFile -Value $StackTrace
         }
        
         

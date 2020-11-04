@@ -32,8 +32,8 @@ function Get-IIsConfiguration {
         try {
             $WindowsVersion = (systeminfo | Select-String 'OS Version:')[0].ToString().Split(':')[1].Trim()
             $output += "`nWindows Version:" + $WindowsVersion
-        
-            # $installDetails = Get-WindowsFeature -ComputerName $server_name
+            $iisversion = (get-itemproperty HKLM:\SOFTWARE\Microsoft\InetStp\  | select setupstring,versionstring ).versionstring
+            $output += "`nIIS Version:" + $iisversion
             $features = Get-WindowsOptionalFeature -Online | Where-Object { ($_.FeatureName -like 'IIS-*') -AND ($_.State -eq 'Enabled') };
             $FTPfeatures = Get-WindowsOptionalFeature -Online | Where-Object { ($_.FeatureName -like 'IIS-FTP*') -AND ($_.State -eq "Enabled") };
             $totalfeatures = Get-WindowsOptionalFeature -Online | Where-Object { ($_.FeatureName -like 'IIS-*') };
