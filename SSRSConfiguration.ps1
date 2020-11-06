@@ -33,56 +33,59 @@ function Get-SSRSConiguration {
         $servername = $env:COMPUTERNAME
         $instanceName = "localhost"
         $erroFile = "./error_log/ssrsconfig_" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".txt"
+        $server = New-Object -TypeName Microsoft.SqlServer.Management.Smo.Server -ArgumentList $instanceName
+        $serverVersion = $server.Information.VersionString
+        $output = $server
 
-        try {
-            $server = New-Object -TypeName Microsoft.SqlServer.Management.Smo.Server -ArgumentList $instanceName
-            $serverVersion = $server.Information.VersionString
+        # try {
+        #     $server = New-Object -TypeName Microsoft.SqlServer.Management.Smo.Server -ArgumentList $instanceName
+        #     $serverVersion = $server.Information.VersionString
+        #     $server
+        #     $folder = $server.Information.MasterDBLogPath
+        #     # $folder
             $ssrsConnectionTimeout = $server.ConnectionContext.ConnectTimeout 
             $output += "`n ssrsConnectionTimeout: $ssrsConnectionTimeout"
-            $folder = $server.Information.MasterDBLogPath
-            # $folder
-            
-            $rs = (Get-WmiObject -namespace root\Microsoft\SqlServer\ReportServer  -class __Namespace).Name
-            $nspace = "root\Microsoft\SQLServer\ReportServer\$rs\v$v\Admin"
-            $RSServers = Get-WmiObject -Namespace $nspace -class MSReportServer_ConfigurationSetting -ComputerName $servername -ErrorVariable perror -ErrorAction SilentlyContinue
-            $WebPortalUrl
-            foreach ($r in $RSServers) {
-                $folder = $server.Information.MasterDBLogPath
+        #     $rs = (Get-WmiObject -namespace root\Microsoft\SqlServer\ReportServer  -class __Namespace).Name
+        #     $nspace = "root\Microsoft\SQLServer\ReportServer\$rs\v$v\Admin"
+        #     $RSServers = Get-WmiObject -Namespace $nspace -class MSReportServer_ConfigurationSetting -ComputerName $servername -ErrorVariable perror -ErrorAction SilentlyContinue
+        #     $WebPortalUrl
+        #     foreach ($r in $RSServers) {
+        #         $folder = $server.Information.MasterDBLogPath
     
-                $ssrsInstanceName = $r.InstanceName
-                $output += "`n ssrsInstanceName: $ssrsInstanceName"
-                $ssrsVers = $r.version
-                $output += "`n ssrsVers: $ssrsVers; SQL Version: $serverVersion"
-                $ssrsDB = $r.DatabaseName
-                # $output += "`n ssrsDB: $ssrsDB"
-                $vPath = $r.VirtualDirectoryReportServer
-                $urls = $r.ListReservedUrls()
-                $urls = $urls.UrlString[0]
-                $WebPortalUrl = $urls.Replace('+', $servername) + "/$vPath"
-                $output += "`n WEB Service URL: $WebPortalUrl"
+        #         $ssrsInstanceName = $r.InstanceName
+        #         $output += "`n ssrsInstanceName: $ssrsInstanceName"
+        #         $ssrsVers = $r.version
+        #         $output += "`n ssrsVers: $ssrsVers; SQL Version: $serverVersion"
+        #         $ssrsDB = $r.DatabaseName
+        #         # $output += "`n ssrsDB: $ssrsDB"
+        #         $vPath = $r.VirtualDirectoryReportServer
+        #         $urls = $r.ListReservedUrls()
+        #         $urls = $urls.UrlString[0]
+        #         $WebPortalUrl = $urls.Replace('+', $servername) + "/$vPath"
+        #         $output += "`n WEB Service URL: $WebPortalUrl"
     
-                $ReportServerUri = $WebPortalUrl + "/ReportService2010.asmx"
-                $InheritParent = $true
+        #         $ReportServerUri = $WebPortalUrl + "/ReportService2010.asmx"
+        #         $InheritParent = $true
          
-                $rsProxy = New-WebServiceProxy -Uri $ReportServerUri -UseDefaultCredential
-                $items = $rsProxy.GetPolicies($folderName, [ref]$InheritParent)
-                $contentManagers = ""
-                foreach ($item in $items) {
-                    if ($item.Roles.Name -eq "Content Manager") {
-                        $contentManagers += $item.GroupUserName + ","
-                    }
-                }
-                $output += "`n Content Managers: $contentManagers"
+        #         $rsProxy = New-WebServiceProxy -Uri $ReportServerUri -UseDefaultCredential
+        #         $items = $rsProxy.GetPolicies($folderName, [ref]$InheritParent)
+        #         $contentManagers = ""
+        #         foreach ($item in $items) {
+        #             if ($item.Roles.Name -eq "Content Manager") {
+        #                 $contentManagers += $item.GroupUserName + ","
+        #             }
+        #         }
+        #         $output += "`n Content Managers: $contentManagers"
     
-                if ($r.VirtualDirectoryReportManager -ne "") {
-                    $reportManagerUrl = $urls.Replace('+', $servername) + "/" + $r.VirtualDirectoryReportManager
-                }
-                else {
-                    $reportManagerUrl = $urls.Replace('+', $servername) + "/Reports"
-                }
-                $output += "`n Report Manager URL: $reportManagerUrl"
-                $SecureConnectionLevel = $r.SecureConnectionLevel
-                $output += "`n Secure Connection Level: $SecureConnectionLevel"
+        #         if ($r.VirtualDirectoryReportManager -ne "") {
+        #             $reportManagerUrl = $urls.Replace('+', $servername) + "/" + $r.VirtualDirectoryReportManager
+        #         }
+        #         else {
+        #             $reportManagerUrl = $urls.Replace('+', $servername) + "/Reports"
+        #         }
+        #         $output += "`n Report Manager URL: $reportManagerUrl"
+        #         $SecureConnectionLevel = $r.SecureConnectionLevel
+        #         $output += "`n Secure Connection Level: $SecureConnectionLevel"
     
                 $SenderEmailAddress = $r.SenderEmailAddress
                 if ($SenderEmailAddress -ne "") {
