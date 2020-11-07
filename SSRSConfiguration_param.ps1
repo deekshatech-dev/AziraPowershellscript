@@ -16,8 +16,36 @@ function Get-SSRSConiguration {
     
     Param
     (
-        # [Parameter(Mandatory=$false)]
-        #$RemoteComputerName
+        [Parameter(Mandatory = $false)]
+        $showssrsConnectionTimeout,
+        [Parameter(Mandatory = $false)]
+        $showssrsInstanceName,
+        [Parameter(Mandatory = $false)]
+        $showssrsVsSqlVersion,
+        [Parameter(Mandatory = $false)]
+        $showWebPortalUrl,
+        [Parameter(Mandatory = $false)]
+        $showcontentManagers,
+        [Parameter(Mandatory = $false)]
+        $showreportManagerUrl,
+        [Parameter(Mandatory = $false)]
+        $showSecureConnectionLevel,
+        [Parameter(Mandatory = $false)]
+        $showSenderEmailAddress,
+        [Parameter(Mandatory = $false)]
+        $showexecAccount,
+        [Parameter(Mandatory = $false)]
+        $showssrsDBmdfPath,
+        [Parameter(Mandatory = $false)]
+        $showssrsDBmdfSize,
+        [Parameter(Mandatory = $false)]
+        $showssrsDBldfSize,
+        [Parameter(Mandatory = $false)]
+        $showssrsTempDBmdfSize,
+        [Parameter(Mandatory = $false)]
+        $showssrsTempDBldfPath,
+        [Parameter(Mandatory = $false)]
+        $showssrsTempDBldfSize
     )
 
     Begin {
@@ -44,7 +72,9 @@ function Get-SSRSConiguration {
             $folder = $server.Information.MasterDBLogPath
            
             $ssrsConnectionTimeout = $server.ConnectionContext.ConnectTimeout 
-            $output += "`n ssrsConnectionTimeout: $ssrsConnectionTimeout"
+            if ($showssrsConnectionTimeout) {
+                $output += "`n ssrsConnectionTimeout: $ssrsConnectionTimeout"
+            }
             $rs = (Get-WmiObject -namespace root\Microsoft\SqlServer\ReportServer  -class __Namespace).Name
             $nspace = "root\Microsoft\SQLServer\ReportServer\$rs\v$v\Admin"
             $RSServers = Get-WmiObject -Namespace $nspace -class MSReportServer_ConfigurationSetting -ComputerName $servername -ErrorVariable perror -ErrorAction SilentlyContinue
@@ -53,17 +83,23 @@ function Get-SSRSConiguration {
                 $folder = $server.Information.MasterDBLogPath
     
                 $ssrsInstanceName = $r.InstanceName
-                $output += "`n ssrsInstanceName: $ssrsInstanceName"
+                if ($showssrsInstanceName) {
+                    $output += "`n ssrsInstanceName: $ssrsInstanceName"
+                }
+                
                 $ssrsVers = $r.version
-                $output += "`n ssrsVers: $ssrsVers; SQL Version: $serverVersion"
+                if ($showssrsVsSqlVersion) {
+                    $output += "`n ssrsVers: $ssrsVers; SQL Version: $serverVersion"
+                }
                 $ssrsDB = $r.DatabaseName
                 # $output += "`n ssrsDB: $ssrsDB"
                 $vPath = $r.VirtualDirectoryReportServer
                 $urls = $r.ListReservedUrls()
                 $urls = $urls.UrlString[0]
                 $WebPortalUrl = $urls.Replace('+', $servername) + "/$vPath"
-                $output += "`n WEB Service URL: $WebPortalUrl"
-    
+                if ($showWebPortalUrl) {
+                    $output += "`n WEB Service URL: $WebPortalUrl"
+                }
                 $ReportServerUri = $WebPortalUrl + "/ReportService2010.asmx"
                 $InheritParent = $true
          
@@ -75,7 +111,9 @@ function Get-SSRSConiguration {
                         $contentManagers += $item.GroupUserName + ","
                     }
                 }
-                $output += "`n Content Managers: $contentManagers"
+                if ($showcontentManagers) {
+                    $output += "`n Content Managers: $contentManagers"
+                }
     
                 if ($r.VirtualDirectoryReportManager -ne "") {
                     $reportManagerUrl = $urls.Replace('+', $servername) + "/" + $r.VirtualDirectoryReportManager
@@ -83,44 +121,63 @@ function Get-SSRSConiguration {
                 else {
                     $reportManagerUrl = $urls.Replace('+', $servername) + "/Reports"
                 }
-                $output += "`n Report Manager URL: $reportManagerUrl"
+                if ($showreportManagerUrl) {
+                    $output += "`n Report Manager URL: $reportManagerUrl"
+                }
                 $SecureConnectionLevel = $r.SecureConnectionLevel
-                $output += "`n Secure Connection Level: $SecureConnectionLevel"
-    
+                if ($showSecureConnectionLevel) {
+                    $output += "`n Secure Connection Level: $SecureConnectionLevel"
+                }
                 $SenderEmailAddress = $r.SenderEmailAddress
-                if ($SenderEmailAddress -ne "") {
-                    $output += "`n E-Mail Setting: $SenderEmailAddress"
+                if ($showSenderEmailAddress) {
+                    if ($SenderEmailAddress -ne "") {
+                        $output += "`n E-Mail Setting: $SenderEmailAddress"
+                    }
+                    else {
+                        $output += "`n E-Mail Setting: N/A"
+                    }
                 }
-                else {
-                    $output += "`n E-Mail Setting: N/A"
+                if ($showexecAccount) {
+                    $execAccount = $r.UnattendedExecutionAccount
+                    if ($execAccount -ne "") {
+                        $output += "`n Execution Account: $execAccount"
+                    }
+                    else {
+                        $output += "`n SSRS Excution account is not configured"
+                    }
                 }
-                $execAccount = $r.UnattendedExecutionAccount
-                if ($execAccount -ne "") {
-                    $output += "`n Execution Account: $execAccount"
-                }
-                else {
-                    $output += "`n SSRS Excution account is not configured"
-                }
-
                 $ssrsDBmdfPath = $folder + "\" + $ssrsDB + ".mdf"
-                $output += "`n ssrsDBmdfPath: $ssrsDBmdfPath"
+                if ($showssrsDBmdfPath) {
+                    $output += "`n ssrsDBmdfPath: $ssrsDBmdfPath"
+                }
                 $ssrsDBmdfSize = (Get-Item $ssrsDBmdfPath).length / 1MB
-                $output += "`n ssrsDBmdfSize: $ssrsDBmdfSize" + " MB"
-
+                if ($showssrsDBmdfSize) {
+                    $output += "`n ssrsDBmdfSize: $ssrsDBmdfSize" + " MB"
+                }
                 $ssrsDBldfPath = $folder + "\" + $ssrsDB + "_log.ldf"
-                $output += "`n ssrsDBldfPath: $ssrsDBldfPath"
+                if ($showssrsDBldfPath) {
+                    $output += "`n ssrsDBldfPath: $ssrsDBldfPath"
+                }
                 $ssrsDBldfSize = (Get-Item $ssrsDBldfPath).length / 1MB
-                $output += "`n ssrsDBmdfSize: $ssrsDBldfSize" + " MB"
-                
+                if ($showssrsDBldfSize) {
+                    $output += "`n ssrsDBldfSize: $ssrsDBldfSize" + " MB"
+                }
                 $ssrsTempDBmdfPath = $folder + "\" + $ssrsDB + "TempDB.mdf"
-                $output += "`n ssrsTempDBldfPath: $ssrsTempDBmdfPath"
+                if ($showssrsTempDBmdfPath) {
+                    $output += "`n ssrsTempDBldfPath: $ssrsTempDBmdfPath"
+                }
                 $ssrsTempDBmdfSize = (Get-Item $ssrsTempDBmdfPath).length / 1MB
-                $output += "`n ssrsTempDBmdfSize: $ssrsTempDBmdfSize" + " MB"
-
+                if ($showssrsTempDBmdfSize) {
+                    $output += "`n ssrsTempDBmdfSize: $ssrsTempDBmdfSize" + " MB"
+                }
                 $ssrsTempDBldfPath = $folder + "\" + $ssrsDB + "TempDB_log.ldf"
-                $output += "`n ssrsTempDBldfPath: $ssrsTempDBldfPath"
+                if ($showssrsTempDBldfPath) {
+                    $output += "`n ssrsTempDBldfPath: $ssrsTempDBldfPath"
+                }
                 $ssrsTempDBldfSize = (Get-Item $ssrsTempDBldfPath).length / 1MB
-                $output += "`n ssrsTempDBldfSize: $ssrsTempDBldfSize" + " MB"
+                if ($showssrsTempDBldfSize) {
+                    $output += "`n ssrsTempDBldfSize: $ssrsTempDBldfSize" + " MB"
+                }
             }
         }
         catch {
