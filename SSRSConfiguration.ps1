@@ -33,11 +33,7 @@ function Get-SSRSConiguration {
         $servername = $env:COMPUTERNAME
         $instanceName = "localhost"
         $erroFile = "./error_log/ssrsconfig_" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".txt"
-        $server = New-Object -TypeName Microsoft.SqlServer.Management.Smo.Server -ArgumentList $instanceName
-        $serverVersion = $server.Information.VersionString
-        $output = $server
-
-        try {
+                try {
             $server = New-Object -TypeName Microsoft.SqlServer.Management.Smo.Server -ArgumentList $instanceName
             $serverVersion = $server.Information.VersionString
             $server
@@ -124,11 +120,11 @@ function Get-SSRSConiguration {
             }
         }
         catch {
-            $_
             $err = $_
-            $StackTrace = $_.ScriptStackTrace 
-            Set-Content -Path $erroFile -Value $err 
-            Set-Content -Path $erroFile -Value $StackTrace
+            $ErrorStackTrace = $_.ScriptStackTrace 
+            $ErrorBlock = ($err).ToString() + "`n`nStackTrace: " + ($ErrorStackTrace).ToString()
+            Set-Content -Path $erroFile -Value $ErrorBlock
+            "Some error occured check " + $erroFile + " for stacktrace"
         }
        
         

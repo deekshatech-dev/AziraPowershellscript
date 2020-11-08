@@ -76,8 +76,11 @@ function Get-SSASConfiguration {
             $ssasServerMode = $svr.ServerMode
         }
         catch {
-            $err = $_ + $_.ScriptStackTrace 
-            Set-Content -Path $erroFile -Value $err 
+            $err = $_
+            $ErrorStackTrace = $_.ScriptStackTrace 
+            $ErrorBlock = ($err).ToString() + "`n`nStackTrace: " + ($ErrorStackTrace).ToString()
+            Set-Content -Path $erroFile -Value $ErrorBlock
+            "Some error occured check " + $erroFile + " for stacktrace"
         }
        
 

@@ -18,6 +18,7 @@ function Get-ServerDiagnostics {
     (
         # [Parameter(Mandatory=$false)]
         #$RemoteComputerName
+        [string]$database = $args[0]
     )
 
     Begin {
@@ -31,7 +32,7 @@ function Get-ServerDiagnostics {
         $server_name = $env:COMPUTERNAME
         try {
             $output += "`n server_name: $server_name"
-            $dbName = "PowershellDB"
+            $dbName = $database
             $output += "`n dbName: $dbName"
             $instanceName = "localhost"
             $server = New-Object -TypeName Microsoft.SqlServer.Management.Smo.Server -ArgumentList $instanceName
@@ -64,11 +65,11 @@ function Get-ServerDiagnostics {
             else {
                 $tempdbMoreThanOneFile = "TempDB is configured with more than one data file. More data files are usually required to alleviate SGAM contention"
             }
-            $output += "`n tempDbExist: $tempDbExist"
-            $output += "`n modelDbExist: $modelDbExist"
-            $output += "`n masterDbExist: $masterDbExist"
-            $output += "`n MSDbExist: $MSDbExist"
-            $output += "`n tempdbMoreThanOneFile: $tempdbMoreThanOneFile"
+            $output += "`n TEMPDB Database on C Drive: $tempDbExist"
+            $output += "`n MODEL Database on C Drive: $modelDbExist"
+            $output += "`n MASTER Database on C Drive: $masterDbExist"
+            $output += "`n MSDB Database on C Drive: $MSDbExist"
+            $output += "`n TempDB Only Has 1 Data File: $tempdbMoreThanOneFile"
         
             $backupFolder = $server.Settings.BackupDirectory        
 
@@ -111,8 +112,11 @@ function Get-ServerDiagnostics {
             $output += "`n DbIntegrityCheck: $DbIntegrityCheck"
         }
         catch {
-            $err = $_ + $_.ScriptStackTrace 
-            Set-Content -Path $erroFile -Value $err 
+            $err = $_
+            $ErrorStackTrace = $_.ScriptStackTrace 
+            $ErrorBlock = ($err).ToString() + "`n`nStackTrace: " + ($ErrorStackTrace).ToString()
+            Set-Content -Path $erroFile -Value $ErrorBlock
+            "Some error occured check " + $erroFile + " for stacktrace"
         }
         
     }

@@ -23,8 +23,6 @@ function Get-IIsConfiguration {
     Begin {
         $output = ""
         $totalspace = 0
-        # Install-Module servermanager
-        # Import-Module servermanager
         # Import-Module WebAdministration
     }
     Process {   
@@ -45,8 +43,30 @@ function Get-IIsConfiguration {
             $output += "`n Feature List"
             $output += "`n =============================="
             $featureNames = ''
+            $featureDetails = ''
             foreach ($item in $featuresList) {
-                $tempName = $item.FeatureName
+                # $tempObj = New-Object -TypeName psobject
+
+                $featureName = $item.FeatureName
+                $tempObj = Get-WindowsOptionalFeature -online -FeatureName $item.FeatureName
+                $displayName = $tempObj.DisplayName
+                $description = $tempObj.Description
+                $state = $tempObj.State
+                if ($tempObj.CustomProperties.count -gt 0) {
+                    $customProperties = $tempObj.CustomProperties
+                }
+                else {
+                    $customProperties = "N/A"
+                }
+                $tempName = "`n ==========================================="
+                $tempName += "`n $featureName Description:"
+                $tempName += "`n ==========================================="
+                $tempName += "`n Feature Name: $featureName"
+                $tempName += "`n Display Name: $displayName"
+                $tempName += "`n State: $state"
+                $tempName += "`n Description: $description"
+                $tempName += "`n Custom Property: $customProperties"
+                $tempName += "`n ==========================================="
                 $featureNames += "`n $tempName"
             }
             
@@ -123,8 +143,11 @@ function Get-IIsConfiguration {
             }
         }
         catch {
-            $err = $_ + $_.ScriptStackTrace 
-            Set-Content -Path $erroFile -Value $err 
+            $err = $_
+            $ErrorStackTrace = $_.ScriptStackTrace 
+            $ErrorBlock = ($err).ToString() + "`n`nStackTrace: " + ($ErrorStackTrace).ToString()
+            Set-Content -Path $erroFile -Value $ErrorBlock
+            "Some error occured check " + $erroFile + " for stacktrace"
         }
 
         
