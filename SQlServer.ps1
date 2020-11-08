@@ -65,7 +65,7 @@ function Get-MachineDetails {
             $databases = $server.Databases
             $databaseExist = $false
             foreach ($db in $databases) {
-                If ($database.Name -like $database) {
+                If ($db.Name -eq $database) {
                     $databaseExist = $true
                 }
             }
@@ -200,14 +200,19 @@ function Get-MachineDetails {
                     $output += "`n dbRecoveryModel: $dbRecoveryModel"
                     $dbCompatibilityLevel = $db.CompatibilityLevel
                     $output += "`n dbCompatibilityLevel: $dbCompatibilityLevel"
-                    $dbLastBackupDate = $db.LastBackupDate
-                    $output += "`n dbLastBackupDate: $dbLastBackupDate"
+                    $dbLastBackupDate = $db.LastBackupDate.ToString("MM/dd/yyyy")
+                    if ($dbLastBackupDate -eq "01/01/0001") {
+                        $output += "`n dbLastBackupDate: N/A"
+                    }
+                    else {
+                        $output += "`n dbLastBackupDate: $dbLastBackupDate"
+                    }
                 }
             }
 
             $folder = $server.Information.MasterDBLogPath
             $authenticationMode = $server.Settings.LoginMode
-            $output += $authenticationMode
+            $output += "`n Auth Mode: $authenticationMode"
             foreach ($file in Get-ChildItem $folder) {
                 if ($file.Name -eq "templog.ldf") {
                     $tempDbLdfPath = $folder + "\" + $file.Name

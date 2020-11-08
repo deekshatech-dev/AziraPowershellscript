@@ -1,5 +1,4 @@
 # Required Modules to Import
-Import-Module servermanager 
 Import-Module SqlServer 
 Import-Module SQLPS 
 Import-Module dbatools 

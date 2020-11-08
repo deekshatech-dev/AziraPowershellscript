@@ -16,8 +16,8 @@ function Get-ServerDiagnostics {
     
     Param
     (
-        # [Parameter(Mandatory=$false)]
         #$RemoteComputerName
+        [Parameter(Mandatory=$true)]
         [string]$database = $args[0]
     )
 
@@ -36,7 +36,19 @@ function Get-ServerDiagnostics {
             $output += "`n dbName: $dbName"
             $instanceName = "localhost"
             $server = New-Object -TypeName Microsoft.SqlServer.Management.Smo.Server -ArgumentList $instanceName
-        
+            $databases = $server.Databases
+            $databaseExist = $false
+            foreach ($db in $databases) {
+                If ($db.Name -like $database) {
+                    $databaseExist = $true
+                }
+            }
+            if ($databaseExist) {
+                
+            }
+            else {
+                $database + " does not Exist!"
+            }
             $folder = $server.Information.MasterDBLogPath
             $tempFileCount = 0
             $tempDbExist = "Does Not Exists"

@@ -56,8 +56,6 @@ function Get-IIsConfiguration {
     Begin {
         $output = ""
         $totalspace = 0
-        # Install-Module servermanager
-        # Import-Module servermanager
         # Import-Module WebAdministration
     }
     Process {   
