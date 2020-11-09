@@ -43,7 +43,7 @@ function Get-SSRSConiguration {
             $rs = (Get-WmiObject -namespace root\Microsoft\SqlServer\ReportServer  -class __Namespace).Name
             $nspace = "root\Microsoft\SQLServer\ReportServer\$rs\v$v\Admin"
             $RSServers = Get-WmiObject -Namespace $nspace -class MSReportServer_ConfigurationSetting -ComputerName $servername -ErrorVariable perror -ErrorAction SilentlyContinue
-            $WebPortalUrl
+            $WebPortalUrl = ''
             foreach ($r in $RSServers) {
                 $folder = $server.Information.MasterDBLogPath
     
@@ -54,38 +54,46 @@ function Get-SSRSConiguration {
                 $ssrsDB = $r.DatabaseName
                 $output += "`n ssrsDB: $ssrsDB"
                 $vPath = $r.VirtualDirectoryReportServer
-                $urls = $r.ListReservedUrls()
-                $urls = $urls.UrlString[0]
 
-                if ( $null -eq $urls) {
-                    $WebPortalUrl = $urls.Replace('+', $servername) + "/$vPath"
-                    $output += "`n WEB Service URL: $WebPortalUrl"
-                }
-                else {
+                if ( $null -eq $ListReservedUrls) {
                     $WebPortalUrl = "N/A"
                     $output += "`n WEB Service URL: $WebPortalUrl"
                 }
-                
-                $ReportServerUri = $WebPortalUrl + "/ReportService2010.asmx"
-                $InheritParent = $true
-         
-                $rsProxy = New-WebServiceProxy -Uri $ReportServerUri -UseDefaultCredential
-                $items = $rsProxy.GetPolicies($folderName, [ref]$InheritParent)
-                $contentManagers = ""
-                foreach ($item in $items) {
-                    if ($item.Roles.Name -eq "Content Manager") {
-                        $contentManagers += $item.GroupUserName + ","
-                    }
+                else {
+                    $ListReservedUrls = $r.ListReservedUrls()
+                    $urls = $ListReservedUrls.UrlString[0]
+
+                    $WebPortalUrl = $urls.Replace('+', $servername) + "/$vPath"
+                    $output += "`n WEB Service URL: $WebPortalUrl"
                 }
-                $output += "`n Content Managers: $contentManagers"
-    
-                if ($r.VirtualDirectoryReportManager -ne "") {
-                    $reportManagerUrl = $urls.Replace('+', $servername) + "/" + $r.VirtualDirectoryReportManager
+                
+                if ($WebPortalUrl -eq "N/A") {
+                    $output += "`n Content Managers: N/A"
+                    $output += "`n Report Manager URL: N/A"
                 }
                 else {
-                    $reportManagerUrl = $urls.Replace('+', $servername) + "/Reports"
+                    $ReportServerUri = $WebPortalUrl + "/ReportService2010.asmx"
+                    $InheritParent = $true
+         
+                    $rsProxy = New-WebServiceProxy -Uri $ReportServerUri -UseDefaultCredential
+                    $items = $rsProxy.GetPolicies($folderName, [ref]$InheritParent)
+                    $contentManagers = ""
+                    foreach ($item in $items) {
+                        if ($item.Roles.Name -eq "Content Manager") {
+                            $contentManagers += $item.GroupUserName + ","
+                        }
+                    }
+                    $output += "`n Content Managers: $contentManagers"
+    
+                    if ($r.VirtualDirectoryReportManager -ne "") {
+                        $reportManagerUrl = $urls.Replace('+', $servername) + "/" + $r.VirtualDirectoryReportManager
+                    }
+                    else {
+                        $reportManagerUrl = $urls.Replace('+', $servername) + "/Reports"
+                    }
+                    $output += "`n Report Manager URL: $reportManagerUrl"
                 }
-                $output += "`n Report Manager URL: $reportManagerUrl"
+                
                 $SecureConnectionLevel = $r.SecureConnectionLevel
                 $output += "`n Secure Connection Level: $SecureConnectionLevel"
     
