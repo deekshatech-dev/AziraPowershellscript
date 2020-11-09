@@ -18,10 +18,11 @@ function Get-MachineDetails {
     (
         # [Parameter(Mandatory=$false)]
         #$RemoteComputerName
-        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-        [ValidateNotNullOrEmpty()]
+        [Parameter(Mandatory = $true)]
         [string]$HostName = $args[0],
-        [string]$port = 443
+        [Parameter(Mandatory = $true)]
+        [AllowEmptyString()]
+        [string]$port = $args[1]
     )
 
     Begin {
@@ -32,6 +33,10 @@ function Get-MachineDetails {
         $erroFile = "./error_log/application" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString()
         
         try {
+            if($port -eq ""){
+                $port = 443
+            }
+            $port
             $CPUCore = (Get-CIMInstance -Class 'CIM_Processor').NumberOfCores
             $UpdateDateObject = (((New-Object -com "Microsoft.Update.AutoUpdate").Results | select -Property LastInstallationSuccessDate).LastInstallationSuccessDate).ToString("MM/dd/yyyy")
             $RAM = (systeminfo | Select-String 'Total Physical Memory:').ToString().Split(':')[1].Trim()

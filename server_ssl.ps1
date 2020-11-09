@@ -1,15 +1,15 @@
 function Test-ServerSSLSupport {
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-        [ValidateNotNullOrEmpty()]
-        [string]$HostName
-        # [UInt16]$Port = 443
+        [Parameter(Mandatory = $true)]
+        [string]$HostName = $args[0],
+        [Parameter(Mandatory = $true)]
+        [UInt16]$Port = $args[1]
     )
     process {
         $RetValue = New-Object psobject -Property @{
             Host          = $HostName
-            # Port          = $Port
+            Port          = $Port
             SSLv2         = $false
             SSLv3         = $false
             TLSv1_0       = $false
@@ -52,5 +52,5 @@ function Test-ServerSSLSupport {
     }
 }
 
-Test-ServerSSLSupport "Server url/ip here"
+Test-ServerSSLSupport
 
