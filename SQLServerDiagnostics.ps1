@@ -17,7 +17,7 @@ function Get-ServerDiagnostics {
     Param
     (
         #$RemoteComputerName
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string]$database = $args[0]
     )
 
@@ -33,7 +33,9 @@ function Get-ServerDiagnostics {
         try {
             $output += "`n server_name: $server_name"
             $dbName = $database
-            $output += "`n dbName: $dbName"
+            if ($databaseExist) {
+                $output += "`n dbName: $dbName"
+            }
             $instanceName = "localhost"
             $server = New-Object -TypeName Microsoft.SqlServer.Management.Smo.Server -ArgumentList $instanceName
             $databases = $server.Databases

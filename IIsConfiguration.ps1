@@ -71,7 +71,7 @@ function Get-IIsConfiguration {
             }
             
             $output += "`n $featureNames"
-            $output += "`n `n =============================="
+            $output += "`n ==========================================="
 
             $pspath = "MACHINE/WEBROOT/APPHOST"
             $filter = "system.applicationHost/sites/siteDefaults/limits"
@@ -81,8 +81,14 @@ function Get-IIsConfiguration {
             $output += "`n IIS Connection Timeout: $timeout"
             
             $IisSites = Get-IISSite | Select -Property Name
-            $output += "`n IIS Hosted Websites: $IisSites"
-            
+            $output += "`n ==========================================="
+            $output += "`n IIS Hosted Websites:"
+            $output += "`n ==========================================="
+            foreach ($item in $IisSites) {
+                $websiteName = $item.Name
+                $output += "`n $websiteName"
+            }
+            $output += "`n ==========================================="
             $dotNet35 = Get-WindowsOptionalFeature -Online | Where-Object { ($_.FeatureName -like "NETFx3") } | select -Property State
             if ($dotNet35.State -like "Enabled") {
                 $output += "`n .NET Framework 3.5 including all sub-features are INSTALLED"

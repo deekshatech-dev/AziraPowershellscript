@@ -33,10 +33,9 @@ function Get-SSRSConiguration {
         $servername = $env:COMPUTERNAME
         $instanceName = "localhost"
         $erroFile = "./error_log/ssrsconfig_" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".txt"
-                try {
+        try {
             $server = New-Object -TypeName Microsoft.SqlServer.Management.Smo.Server -ArgumentList $instanceName
             $serverVersion = $server.Information.VersionString
-            $server
             $folder = $server.Information.MasterDBLogPath
            
             $ssrsConnectionTimeout = $server.ConnectionContext.ConnectTimeout 
@@ -53,13 +52,20 @@ function Get-SSRSConiguration {
                 $ssrsVers = $r.version
                 $output += "`n ssrsVers: $ssrsVers; SQL Version: $serverVersion"
                 $ssrsDB = $r.DatabaseName
-                # $output += "`n ssrsDB: $ssrsDB"
+                $output += "`n ssrsDB: $ssrsDB"
                 $vPath = $r.VirtualDirectoryReportServer
                 $urls = $r.ListReservedUrls()
                 $urls = $urls.UrlString[0]
-                $WebPortalUrl = $urls.Replace('+', $servername) + "/$vPath"
-                $output += "`n WEB Service URL: $WebPortalUrl"
-    
+
+                if ( $null -eq $urls) {
+                    $WebPortalUrl = $urls.Replace('+', $servername) + "/$vPath"
+                    $output += "`n WEB Service URL: $WebPortalUrl"
+                }
+                else {
+                    $WebPortalUrl = "N/A"
+                    $output += "`n WEB Service URL: $WebPortalUrl"
+                }
+                
                 $ReportServerUri = $WebPortalUrl + "/ReportService2010.asmx"
                 $InheritParent = $true
          
