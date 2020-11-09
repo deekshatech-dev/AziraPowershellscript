@@ -36,7 +36,6 @@ function Get-MachineDetails {
             if($port -eq ""){
                 $port = 443
             }
-            $port
             $CPUCore = (Get-CIMInstance -Class 'CIM_Processor').NumberOfCores
             $UpdateDateObject = (((New-Object -com "Microsoft.Update.AutoUpdate").Results | select -Property LastInstallationSuccessDate).LastInstallationSuccessDate).ToString("MM/dd/yyyy")
             $RAM = (systeminfo | Select-String 'Total Physical Memory:').ToString().Split(':')[1].Trim()
