@@ -23,7 +23,7 @@ function Get-IIsConfiguration {
     Begin {
         $output = ""
         $totalspace = 0
-        # Import-Module WebAdministration
+        "IIS Configuration Details: Installed IIS Features count & List, IIS Connection Timeout,  .NET framework details, Compression strategies status, etc."
     }
     Process {   
         $server_name = $env:COMPUTERNAME

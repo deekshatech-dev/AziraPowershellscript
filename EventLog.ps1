@@ -23,7 +23,6 @@ function Get-SqlErrorLog {
     Begin {
         $output = ""
         $totalspace = 0
-        
     }
     Process {   
         try {
