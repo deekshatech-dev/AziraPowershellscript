@@ -56,11 +56,16 @@ function Get-SSRSConiguration {
             # $rsConfig = Get-WmiObject –namespace "root\Microsoft\SqlServer\ReportServer\$wmiName\v11\Admin" -class MSReportServer_ConfigurationSetting
             # $rsConfig
             # $ssrsConnectionTimeout = $rsConfig.DatabaseLogonTimeout
-            $output += "`n ssrsConnectionTimeout: $ssrsConnectionTimeout"
             $rs = (Get-WmiObject -namespace root\Microsoft\SqlServer\ReportServer  -class __Namespace).Name
             $nspace = "root\Microsoft\SQLServer\ReportServer\$rs\v$v\Admin"
             $RSServers = Get-WmiObject -Namespace $nspace -class MSReportServer_ConfigurationSetting -ComputerName $servername -ErrorVariable perror -ErrorAction SilentlyContinue
             $WebPortalUrl = ''
+            if($RSServers) {
+                if ($RSServers.length > 0) {
+                    ## Need to checkwhenthe server exists
+                    $output += "`n ssrsConnectionTimeout: $ssrsConnectionTimeout"
+                }
+            }
             foreach ($r in $RSServers) {
                 $folder = $server.Information.MasterDBLogPath
     
