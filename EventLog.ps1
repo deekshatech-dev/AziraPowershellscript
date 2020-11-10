@@ -11,6 +11,7 @@
     Version: 0.1 
     DateCreated: 14th Oct 2020
 #>
+"Workstation Error Log"
 
 function Get-SqlErrorLog {
     
@@ -23,6 +24,20 @@ function Get-SqlErrorLog {
     Begin {
         $output = ""
         $totalspace = 0
+        try {
+            Import-Module SqlServer 
+ #           Import-Module SQLPS 
+            Import-Module dbatools 
+        }
+        catch {
+            "Installing Prerequistic....Please wait"
+            Install-Module dbatools -AllowClobber
+            Install-Module SqlServer -AllowClobber
+            Import-Module SqlServer 
+#            Import-Module SQLPS 
+            Import-Module dbatools 
+
+        }
     }
     Process {   
         try {

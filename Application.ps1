@@ -11,7 +11,7 @@
     Version: 0.1 
     DateCreated: 14th Oct 2020
 #>
-
+"Application Configuration Details: OS Details, Machine Name, RAM Details, Memory details and Allocation, SQL Server Timeout,  SSL/TLS Details for Client and Sserver, CPU details,etc."
 function Get-MachineDetails {
     
     Param
@@ -19,17 +19,30 @@ function Get-MachineDetails {
         # [Parameter(Mandatory=$false)]
         #$RemoteComputerName
         [Parameter(Mandatory = $true)]
-        [string]$HostName = $args[0],
+        [string]$HostName = $args[0], #Name of the server to connect
         [Parameter(Mandatory = $true)]
         [AllowEmptyString()]
-        [string]$port = $args[1]
-    )
-
-    Begin {
+        [string]$port = $args[1] #Port of the server
+        )
+        
+        Begin {
+            
         $output = ""
         $totalspace = 0
-        "Application Configuration Details: OS Details, Machine Name, RAM Details, Memory details and Allocation, SQL Server Timeout,  SSL/TLS Details for Client and Sserver, ,
-CPU details,etc."
+        try {
+            Import-Module SqlServer 
+ #           Import-Module SQLPS 
+            Import-Module dbatools 
+        }
+        catch {
+            "Installing Prerequistic....Please wait"
+            Install-Module dbatools -AllowClobber
+            Install-Module SqlServer -AllowClobber
+            Import-Module SqlServer 
+#            Import-Module SQLPS 
+            Import-Module dbatools 
+
+        }
     }
     Process {
         $erroFile = "./error_log/application" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString()
@@ -107,7 +120,7 @@ CPU details,etc."
             }
             "ssl2", "ssl3", "tls", "tls11", "tls12" | % {
                 $TcpClient = New-Object Net.Sockets.TcpClient
-                $TcpClient.Connect($RetValue.Host, $RetValue.Port)
+                $TcpClient.Connect($RetValue.Host, [int]$RetValue.Port)
                 $SslStream = New-Object Net.Security.SslStream $TcpClient.GetStream()
                 $SslStream.ReadTimeout = 15000
                 $SslStream.WriteTimeout = 15000

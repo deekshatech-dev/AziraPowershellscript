@@ -12,8 +12,9 @@
     DateCreated: 14th Oct 2020
 #>
 
+"Get SSRS Configuration Details: SSRS Connection Timeout, SSRS Instance Name, Version, DB name, Webservice URL, Report Manager URL, Content Manager, Email Settings, Secure Connection,SSRS Database Files and sizes."
+
 function Get-SSRSConiguration {
-    
     Param
     (
         # [Parameter(Mandatory=$false)]
@@ -24,13 +25,23 @@ function Get-SSRSConiguration {
         $output = ""
         $v = 14
         $folderName = "/MyReportFolder"
-        "Get SSRS Configuration Details: SSRS Connection Timeout, SSRS Instance Name, Version, DB name, Webservice URL, Report Manager URL, Content Manager, Email Settings, Secure Connection,
-SSRS Database Files and sizes."
+        try {
+            Import-Module SqlServer 
+ #           Import-Module SQLPS 
+            Import-Module dbatools 
+        }
+        catch {
+            "Installing Prerequistic....Please wait"
+            Install-Module dbatools -AllowClobber
+            Install-Module SqlServer -AllowClobber
+            Import-Module SqlServer 
+#            Import-Module SQLPS 
+            Import-Module dbatools 
+
+        }
         # Import-Module SQLPS
     }
     Process {   
-        
-        
         $servername = $env:COMPUTERNAME
         $instanceName = "localhost"
         $erroFile = "./error_log/ssrsconfig_" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".txt"
@@ -40,6 +51,11 @@ SSRS Database Files and sizes."
             $folder = $server.Information.MasterDBLogPath
            
             $ssrsConnectionTimeout = $server.ConnectionContext.ConnectTimeout 
+            # $wmiName = Get-WmiObject –namespace root\Microsoft\SqlServer\ReportServer  –class __Namespace
+            # $wmiName
+            # $rsConfig = Get-WmiObject –namespace "root\Microsoft\SqlServer\ReportServer\$wmiName\v11\Admin" -class MSReportServer_ConfigurationSetting
+            # $rsConfig
+            # $ssrsConnectionTimeout = $rsConfig.DatabaseLogonTimeout
             $output += "`n ssrsConnectionTimeout: $ssrsConnectionTimeout"
             $rs = (Get-WmiObject -namespace root\Microsoft\SqlServer\ReportServer  -class __Namespace).Name
             $nspace = "root\Microsoft\SQLServer\ReportServer\$rs\v$v\Admin"

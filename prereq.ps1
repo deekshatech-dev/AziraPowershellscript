@@ -10,7 +10,7 @@ Function Get-PrerequiredModules {
         Import-Module dbatools 
     }
     catch {
-        "catch"
+        "Installing Prerequistic....Please wait"
         Install-Module dbatools -AllowClobber
         Install-Module SqlServer -AllowClobber
     }

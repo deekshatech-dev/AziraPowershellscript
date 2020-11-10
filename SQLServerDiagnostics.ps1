@@ -12,6 +12,7 @@
     DateCreated: 14th Oct 2020
 #>
 
+"Get Diagnostic Details about SQL Server: Server Name, Database Name, TempDB, MasterDB, MSDB, ModelDB file and backup details. "
 function Get-ServerDiagnostics {
     
     Param
@@ -22,9 +23,22 @@ function Get-ServerDiagnostics {
     )
 
     Begin {
-        "Get Diagnostic Details about SQL Server: Server Name, Database Name, TempDB, MasterDB, MSDB, ModelDB file and backup details. "
         $output = ""
         $totalspace = 0
+        try {
+            Import-Module SqlServer 
+ #           Import-Module SQLPS 
+            Import-Module dbatools 
+        }
+        catch {
+            "Installing Prerequistic....Please wait"
+            Install-Module dbatools -AllowClobber
+            Install-Module SqlServer -AllowClobber
+            Import-Module SqlServer 
+#            Import-Module SQLPS 
+            Import-Module dbatools 
+
+        }
         
     }
     Process {   
@@ -80,10 +94,10 @@ function Get-ServerDiagnostics {
             else {
                 $tempdbMoreThanOneFile = "TempDB is configured with more than one data file. More data files are usually required to alleviate SGAM contention"
             }
-            $output += "`n TEMPDB Database on C Drive: $tempDbExist"
-            $output += "`n MODEL Database on C Drive: $modelDbExist"
-            $output += "`n MASTER Database on C Drive: $masterDbExist"
-            $output += "`n MSDB Database on C Drive: $MSDbExist"
+            $output += "`n Is TEMPDB Database Exists? $tempDbExist"
+            $output += "`n Is MODEL Database Exists? $modelDbExist"
+            $output += "`n Is MASTER Database Exists? $masterDbExist"
+            $output += "`n Is MSDB Database Exists? $MSDbExist"
             $output += "`n TempDB Only Has 1 Data File: $tempdbMoreThanOneFile"
         
             $backupFolder = $server.Settings.BackupDirectory        

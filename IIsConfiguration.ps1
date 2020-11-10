@@ -11,7 +11,7 @@
     Version: 0.1 
     DateCreated: 14th Oct 2020
 #>
-
+"IIS Configuration Details: Installed IIS Features count & List, IIS Connection Timeout,  .NET framework details, Compression strategies status, etc."
 function Get-IIsConfiguration {
     
     Param
@@ -21,9 +21,23 @@ function Get-IIsConfiguration {
     )
 
     Begin {
+        $info 
         $output = ""
         $totalspace = 0
-        "IIS Configuration Details: Installed IIS Features count & List, IIS Connection Timeout,  .NET framework details, Compression strategies status, etc."
+        try {
+            Import-Module SqlServer 
+ #           Import-Module SQLPS 
+            Import-Module dbatools 
+        }
+        catch {
+            "Installing Prerequistic....Please wait"
+            Install-Module dbatools -AllowClobber
+            Install-Module SqlServer -AllowClobber
+            Import-Module SqlServer 
+#            Import-Module SQLPS 
+            Import-Module dbatools 
+
+        }
     }
     Process {   
         $server_name = $env:COMPUTERNAME
