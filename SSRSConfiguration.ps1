@@ -24,7 +24,8 @@ function Get-SSRSConiguration {
         $output = ""
         $v = 14
         $folderName = "/MyReportFolder"
-
+        "Get SSRS Configuration Details: SSRS Connection Timeout, SSRS Instance Name, Version, DB name, Webservice URL, Report Manager URL, Content Manager, Email Settings, Secure Connection,
+SSRS Database Files and sizes."
         # Import-Module SQLPS
     }
     Process {   

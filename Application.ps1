@@ -28,6 +28,8 @@ function Get-MachineDetails {
     Begin {
         $output = ""
         $totalspace = 0
+        "Application Configuration Details: OS Details, Machine Name, RAM Details, Memory details and Allocation, SQL Server Timeout,  SSL/TLS Details for Client and Sserver, ,
+CPU details,etc."
     }
     Process {
         $erroFile = "./error_log/application" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString()

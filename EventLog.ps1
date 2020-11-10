@@ -27,6 +27,7 @@ function Get-SqlErrorLog {
     }
     Process {   
         try {
+            $erroFile = "./error_log/eventlog_" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".txt"
             $event_log = (Get-EventLog -LogName "application" -EntryType Error | Where-Object { ($_.source -like "*SQL*") -or ($_.source -like "*ssrs*") -or ($_.source -like "*ssas*") } ) | Format-List
             $output += ($event_log | Out-String).ToString()
         }

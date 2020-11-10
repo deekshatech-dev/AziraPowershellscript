@@ -23,7 +23,7 @@ function Get-SSASConfiguration {
     Begin {
         $output = ""
         $totalspace = 0
-        
+        "Get SSAS Configuration Details: Windows Server, Windows Version, SSAS Connection Timeout, SSAS Version, SSAS Server Mode, SSAS Edition and other SSAS details."
     }
     Process {   
         $erroFile = "./error_log/ssasconfig_" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".txt"

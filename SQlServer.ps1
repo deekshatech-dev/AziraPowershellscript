@@ -26,9 +26,9 @@ function Get-MachineDetails {
     )
 
     Begin {
+        "Get Details about SQL Server: Connection Timeout, SQL version, Memory Allocation Details, Database files details, Port running on, Server type, Hardware usage, FIlestreamDetails, etc."
         $output = ""
         $totalspace = 0
-        
     }
     Process {   
         # Install-Module SqlServer -AllowClobber

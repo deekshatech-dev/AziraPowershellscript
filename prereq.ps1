@@ -13,7 +13,6 @@ Function Get-PrerequiredModules {
         "catch"
         Install-Module dbatools -AllowClobber
         Install-Module SqlServer -AllowClobber
-        
     }
 }
 Get-PrerequiredModules

@@ -22,6 +22,7 @@ function Get-ServerDiagnostics {
     )
 
     Begin {
+        "Get Diagnostic Details about SQL Server: Server Name, Database Name, TempDB, MasterDB, MSDB, ModelDB file and backup details. "
         $output = ""
         $totalspace = 0
         
