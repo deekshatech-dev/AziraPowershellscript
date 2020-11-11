@@ -19,35 +19,118 @@ function Get-ServerDiagnostics {
         # [Parameter(Mandatory=$false)]
         #$RemoteComputerName
         [Parameter(Mandatory = $false)]
-        $showServerName,
+        $showServerName = $args[0],
         [Parameter(Mandatory = $false)]
-        $showDbName,
+        $showDbName = $args[1],
         [Parameter(Mandatory = $false)]
-        $showtempDbExist,
+        $showtempDbExist = $args[2],
         [Parameter(Mandatory = $false)]
-        $showmodelDbExist,
+        $showmodelDbExist = $args[3],
         [Parameter(Mandatory = $false)]
-        $showmasterDbExist,
+        $showmasterDbExist = $args[4],
         [Parameter(Mandatory = $false)]
-        $showMSDbExist,
+        $showMSDbExist = $args[5],
         [Parameter(Mandatory = $false)]
-        $showtempDbMoreThanOneFile,
+        $showtempDbMoreThanOneFile = $args[6],
         [Parameter(Mandatory = $false)]
-        $showmodelback,
+        $showmodelback = $args[7],
         [Parameter(Mandatory = $false)]
-        $showmasterback,
+        $showmasterback = $args[8],
         [Parameter(Mandatory = $false)]
-        $showmsdbback,
+        $showmsdbback = $args[9],
         [Parameter(Mandatory = $false)]
-        $showdbback,
+        $showdbback = $args[10],
         [Parameter(Mandatory = $false)]
-        $showDbIntegrityCheck
+        $showDbIntegrityCheck = $args[11]
     )
 
     Begin {
         $output = ""
         $totalspace = 0
-        
+        if (!$showServerName) {
+            if (($showServerName -eq 0)) {
+                $showServerName = $false
+            } else {
+                $showServerName = $true
+            }
+        }
+        if (!$showDbName) {
+            if (($showDbName -eq 0)) {
+                $showDbName = $false
+            } else {
+                $showDbName = $true
+            }
+        }
+        if (!$showtempDbExist) {
+            if (($showtempDbExist -eq 0)) {
+                $showtempDbExist = $false
+            } else {
+                $showtempDbExist = $true
+            }
+        }
+        if (!$showmodelDbExist) {
+            if (($showmodelDbExist -eq 0)) {
+                $showmodelDbExist = $false
+            } else {
+                $showmodelDbExist = $true
+            }
+        }
+        if (!$showmasterDbExist) {
+            if (($showmasterDbExist -eq 0)) {
+                $showmasterDbExist = $false
+            } else {
+                $showmasterDbExist = $true
+            }
+        }
+        if (!$showMSDbExist) {
+            if (($showMSDbExist -eq 0)) {
+                $showMSDbExist = $false
+            } else {
+                $showMSDbExist = $true
+            }
+        }
+        if (!$showtempDbMoreThanOneFile) {
+            if (($showtempDbMoreThanOneFile -eq 0)) {
+                $showtempDbMoreThanOneFile = $false
+            } else {
+                $showtempDbMoreThanOneFile = $true
+            }
+        }
+        if (!$showmodelback) {
+            if (($showmodelback -eq 0)) {
+                $showmodelback = $false
+            } else {
+                $showmodelback = $true
+            }
+        }
+        if (!$showmasterback) {
+            if (($showmasterback -eq 0)) {
+                $showmasterback = $false
+            } else {
+                $showmasterback = $true
+            }
+        }
+        if (!$showmsdbback) {
+            if (($showmsdbback -eq 0)) {
+                $showmsdbback = $false
+            } else {
+                $showmsdbback = $true
+            }
+        }
+        if (!$showdbback) {
+            if (($showdbback -eq 0)) {
+                $showdbback = $false
+            } else {
+                $showdbback = $true
+            }
+        }
+        if (!$showDbIntegrityCheck) {
+            if (($showDbIntegrityCheck -eq 0)) {
+                $showDbIntegrityCheck = $false
+            } else {
+                $showDbIntegrityCheck = $true
+            }
+        }
     }
     Process {   
         # Import-Module SQLPS
