@@ -17,46 +17,130 @@ function Get-IIsConfiguration {
     Param
     (
         [Parameter(Mandatory=$false)]
-        $ShowWindowsVersion,
+        $showWindowsVersion = $args[0],
 
         [Parameter(Mandatory=$false)]
-        $ShowIISVersion,
+        $showIISVersion = $args[1],
 
         [Parameter(Mandatory=$false)]
-        $ShowHostName,
+        $showHostName = $args[2],
 
         [Parameter(Mandatory=$false)]
-        $ShowDotNet35Status,
+        $showDotNet35Status = $args[3],
 
         [Parameter(Mandatory=$false)]
-        $ShowDotNet45Status,
+        $showDotNet45Status = $args[4],
 
         [Parameter(Mandatory=$false)]
-        $ShowWebCoreStatus,
+        $showWebCoreStatus = $args[5],
 
         [Parameter(Mandatory=$false)]
-        $ShowWindowsProcessActivationService,
+        $showWindowsProcessActivationService = $args[6],
 
         [Parameter(Mandatory=$false)]
-        $ShowSSLCertificate,
+        $showSSLCertificate = $args[7],
 
         [Parameter(Mandatory=$false)]
-        $ShowCompressionSettingApplicationStaticTypes,
+        $showCompressionSettingApplicationStaticTypes = $args[8],
 
         [Parameter(Mandatory=$false)]
-        $ShowCompressionSettingApplicationDynamicTypes,
+        $showCompressionSettingApplicationDynamicTypes = $args[9],
 
         [Parameter(Mandatory=$false)]
-        $ShowCompressionSettingImageStaticTypes,
+        $showCompressionSettingImageStaticTypes = $args[10],
 
         [Parameter(Mandatory=$false)]
-        $ShowCompressionSettingImageDynamicTypes
+        $showCompressionSettingImageDynamicTypes = $args[11]
     )
 
     Begin {
         $output = ""
         $totalspace = 0
         # Import-Module WebAdministration
+        if (!$showWindowsVersion) {
+            if (($showWindowsVersion -eq 0)) {
+                $showWindowsVersion = $false
+            } else {
+                $showWindowsVersion = $true
+            }
+        }
+        if (!$showIISVersion) {
+            if (($showIISVersion -eq 0)) {
+                $showIISVersion = $false
+            } else {
+                $showIISVersion = $true
+            }
+        }
+        if (!$showHostName) {
+            if (($showHostName -eq 0)) {
+                $showHostName = $false
+            } else {
+                $showHostName = $true
+            }
+        }
+        if (!$showDotNet35Status) {
+            if (($showDotNet35Status -eq 0)) {
+                $showDotNet35Status = $false
+            } else {
+                $showDotNet35Status = $true
+            }
+        }
+        if (!$showDotNet45Status) {
+            if (($showDotNet45Status -eq 0)) {
+                $showDotNet45Status = $false
+            } else {
+                $showDotNet45Status = $true
+            }
+        }
+        if (!$showWebCoreStatus) {
+            if (($showWebCoreStatus -eq 0)) {
+                $showWebCoreStatus = $false
+            } else {
+                $showWebCoreStatus = $true
+            }
+        }
+        if (!$showWindowsProcessActivationService) {
+            if (($showWindowsProcessActivationService -eq 0)) {
+                $showWindowsProcessActivationService = $false
+            } else {
+                $showWindowsProcessActivationService = $true
+            }
+        }
+        if (!$showSSLCertificate) {
+            if (($showSSLCertificate -eq 0)) {
+                $showSSLCertificate = $false
+            } else {
+                $showSSLCertificate = $true
+            }
+        }
+        if (!$showCompressionSettingApplicationStaticTypes) {
+            if (($showCompressionSettingApplicationStaticTypes -eq 0)) {
+                $showCompressionSettingApplicationStaticTypes = $false
+            } else {
+                $showCompressionSettingApplicationStaticTypes = $true
+            }
+        }
+        if (!$showCompressionSettingApplicationDynamicTypes) {
+            if (($showCompressionSettingApplicationDynamicTypes -eq 0)) {
+                $showCompressionSettingApplicationDynamicTypes = $false
+            } else {
+                $showCompressionSettingApplicationDynamicTypes = $true
+            }
+        }
+        if (!$showCompressionSettingImageStaticTypes) {
+            if (($showCompressionSettingImageStaticTypes -eq 0)) {
+                $showCompressionSettingImageStaticTypes = $false
+            } else {
+                $showCompressionSettingImageStaticTypes = $true
+            }
+        }
+        if (!$showCompressionSettingImageDynamicTypes) {
+            if (($showCompressionSettingImageDynamicTypes -eq 0)) {
+                $showCompressionSettingImageDynamicTypes = $false
+            } else {
+                $showCompressionSettingImageDynamicTypes = $true
+            }
+        }
     }
     Process {   
         $server_name = $env:COMPUTERNAME

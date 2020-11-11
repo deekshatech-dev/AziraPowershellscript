@@ -12,63 +12,177 @@
     DateCreated: 14th Oct 2020
 #>
 
+function GetParamValue($paramValue) {
+    "funinside"
+    if (($paramValue -eq 0)) {
+        $paramValue = $false
+    } else {
+        $paramValue = $true
+    }
+    $paramValue
+    "END"
+    return $paramValue
+}
 function Get-SSRSConiguration {
     
     Param
     (
         [Parameter(Mandatory = $false)]
-        $showssrsConnectionTimeout,
+        $showssrsConnectionTimeout = $args[0],
         [Parameter(Mandatory = $false)]
-        $showssrsInstanceName,
+        $showssrsInstanceName = $args[1],
         [Parameter(Mandatory = $false)]
-        $showssrsVsSqlVersion,
+        $showssrsVsSqlVersion = $args[2],
         [Parameter(Mandatory = $false)]
-        $showWebPortalUrl,
+        $showWebPortalUrl = $args[3],
         [Parameter(Mandatory = $false)]
-        $showcontentManagers,
+        $showcontentManagers = $args[4],
         [Parameter(Mandatory = $false)]
-        $showreportManagerUrl,
+        $showreportManagerUrl = $args[5],
         [Parameter(Mandatory = $false)]
-        $showSecureConnectionLevel,
+        $showSecureConnectionLevel = $args[6],
         [Parameter(Mandatory = $false)]
-        $showSenderEmailAddress,
+        $showSenderEmailAddress  = $args[7],
         [Parameter(Mandatory = $false)]
-        $showexecAccount,
+        $showexecAccount = $args[8],
         [Parameter(Mandatory = $false)]
-        $showssrsDBmdfPath,
+        $showssrsDBmdfPath = $args[9],
         [Parameter(Mandatory = $false)]
-        $showssrsDBmdfSize,
+        $showssrsDBmdfSize = $args[10],
         [Parameter(Mandatory = $false)]
-        $showssrsDBldfSize,
+        $showssrsDBldfSize = $args[11],
         [Parameter(Mandatory = $false)]
-        $showssrsTempDBmdfSize,
+        $showssrsTempDBmdfSize = $args[12],
         [Parameter(Mandatory = $false)]
-        $showssrsTempDBldfPath,
+        $showssrsTempDBldfPath = $args[13],
         [Parameter(Mandatory = $false)]
-        $showssrsTempDBldfSize
+        $showssrsTempDBldfSize = $args[14]
     )
 
     Begin {
         $output = ""
         $v = 14
         $folderName = "/MyReportFolder"
-
+        if (!$showssrsConnectionTimeout) {
+            if (($showssrsConnectionTimeout -eq 0)) {
+                $showssrsConnectionTimeout = $false
+            } else {
+                $showssrsConnectionTimeout = $true
+            }
+        }
+        if (!$showssrsInstanceName) {
+            if (($showssrsInstanceName -eq 0)) {
+                $showssrsInstanceName = $false
+            } else {
+                $showssrsInstanceName = $true
+            }
+        }
+        if (!$showssrsVsSqlVersion) {
+            if (($showssrsVsSqlVersion -eq 0)) {
+                $showssrsVsSqlVersion = $false
+            } else {
+                $showssrsVsSqlVersion = $true
+            }
+        }
+        if (!$showWebPortalUrl) {
+            if (($showWebPortalUrl -eq 0)) {
+                $showWebPortalUrl = $false
+            } else {
+                $showWebPortalUrl = $true
+            }
+        }
+        if (!$showcontentManagers) {
+            if (($showcontentManagers -eq 0)) {
+                $showcontentManagers = $false
+            } else {
+                $showcontentManagers = $true
+            }
+        }
+        if (!$showreportManagerUrl) {
+            if (($showreportManagerUrl -eq 0)) {
+                $showreportManagerUrl = $false
+            } else {
+                $showreportManagerUrl = $true
+            }
+        }
+        if (!$showSecureConnectionLevel) {
+            if (($showSecureConnectionLevel -eq 0)) {
+                $showSecureConnectionLevel = $false
+            } else {
+                $showSecureConnectionLevel = $true
+            }
+        }
+        if (!$showSenderEmailAddress) {
+            if (($showSenderEmailAddress -eq 0)) {
+                $showSenderEmailAddress = $false
+            } else {
+                $showSenderEmailAddress = $true
+            }
+        }
+        if (!$showexecAccount) {
+            if (($showexecAccount -eq 0)) {
+                $showexecAccount = $false
+            } else {
+                $showexecAccount = $true
+            }
+        }
+        if (!$showssrsDBmdfPath) {
+            if (($showssrsDBmdfPath -eq 0)) {
+                $showssrsDBmdfPath = $false
+            } else {
+                $showssrsDBmdfPath = $true
+            }
+        }
+        if (!$showssrsDBmdfSize) {
+            if (($showssrsDBmdfSize -eq 0)) {
+                $showssrsDBmdfSize = $false
+            } else {
+                $showssrsDBmdfSize = $true
+            }
+        }
+        if (!$showssrsDBldfSize) {
+            if (($showssrsDBldfSize -eq 0)) {
+                $showssrsDBldfSize = $false
+            } else {
+                $showssrsDBldfSize = $true
+            }
+        }
+        if (!$showssrsTempDBmdfSize) {
+            if (($showssrsTempDBmdfSize -eq 0)) {
+                $showssrsTempDBmdfSize = $false
+            } else {
+                $showssrsTempDBmdfSize = $true
+            }
+        }
+        if (!$showssrsTempDBldfPath) {
+            if (($showssrsTempDBldfPath -eq 0)) {
+                $showssrsTempDBldfPath = $false
+            } else {
+                $showssrsTempDBldfPath = $true
+            }
+        }
+        if (!$showssrsTempDBldfSize) {
+            if (($showssrsTempDBldfSize -eq 0)) {
+                $showssrsTempDBldfSize = $false
+            } else {
+                $showssrsTempDBldfSize = $true
+            }
+        }
         # Import-Module SQLPS
+        
     }
     Process {   
-        
         
         $servername = $env:COMPUTERNAME
         $instanceName = "localhost"
         $erroFile = "./error_log/ssrsconfig_" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".txt"
         $server = New-Object -TypeName Microsoft.SqlServer.Management.Smo.Server -ArgumentList $instanceName
         $serverVersion = $server.Information.VersionString
-        $output = $server
+        #$output = $server
 
         try {
             $server = New-Object -TypeName Microsoft.SqlServer.Management.Smo.Server -ArgumentList $instanceName
             $serverVersion = $server.Information.VersionString
-            $server
             $folder = $server.Information.MasterDBLogPath
            
             $ssrsConnectionTimeout = $server.ConnectionContext.ConnectTimeout 
@@ -78,7 +192,7 @@ function Get-SSRSConiguration {
             $rs = (Get-WmiObject -namespace root\Microsoft\SqlServer\ReportServer  -class __Namespace).Name
             $nspace = "root\Microsoft\SQLServer\ReportServer\$rs\v$v\Admin"
             $RSServers = Get-WmiObject -Namespace $nspace -class MSReportServer_ConfigurationSetting -ComputerName $servername -ErrorVariable perror -ErrorAction SilentlyContinue
-            $WebPortalUrl
+            #$WebPortalUrl
             foreach ($r in $RSServers) {
                 $folder = $server.Information.MasterDBLogPath
     
