@@ -19,7 +19,7 @@ function Get-ServerDiagnostics {
         # [Parameter(Mandatory=$false)]
         #$RemoteComputerName
         [Parameter(Mandatory = $true)]
-        [string]$database = $args[0],
+        $database = $args[0],
         [Parameter(Mandatory = $false)]
         $showServerName = $args[1],
         [Parameter(Mandatory = $false)]
@@ -49,9 +49,17 @@ function Get-ServerDiagnostics {
     Begin {
         $output = ""
         $totalspace = 0
+        $outputFolder = "./Output/SqlServerDiagnostics"
+        $outputFile = "./Diagnostic_" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".csv"
+        If (!(Test-Path $outputFolder)) {
+            New-Item -Path $outputFolder -ItemType Directory
+        }
+        If (!(Test-Path "./error_log")) {
+            New-Item -Path "./error_log" -ItemType Directory
+        }
         try {
             Import-Module SqlServer 
- #           Import-Module SQLPS 
+            #           Import-Module SQLPS 
             Import-Module dbatools 
         }
         catch {
@@ -59,91 +67,103 @@ function Get-ServerDiagnostics {
             Install-Module dbatools -AllowClobber
             Install-Module SqlServer -AllowClobber
             Import-Module SqlServer 
-#            Import-Module SQLPS 
+            #            Import-Module SQLPS 
             Import-Module dbatools 
 
         }
         if (!$showServerName) {
             if (($showServerName -eq 0)) {
                 $showServerName = $false
-            } else {
+            }
+            else {
                 $showServerName = $true
             }
         }
         if (!$showDbName) {
             if (($showDbName -eq 0)) {
                 $showDbName = $false
-            } else {
+            }
+            else {
                 $showDbName = $true
             }
         }
         if (!$showtempDbExist) {
             if (($showtempDbExist -eq 0)) {
                 $showtempDbExist = $false
-            } else {
+            }
+            else {
                 $showtempDbExist = $true
             }
         }
         if (!$showmodelDbExist) {
             if (($showmodelDbExist -eq 0)) {
                 $showmodelDbExist = $false
-            } else {
+            }
+            else {
                 $showmodelDbExist = $true
             }
         }
         if (!$showmasterDbExist) {
             if (($showmasterDbExist -eq 0)) {
                 $showmasterDbExist = $false
-            } else {
+            }
+            else {
                 $showmasterDbExist = $true
             }
         }
         if (!$showMSDbExist) {
             if (($showMSDbExist -eq 0)) {
                 $showMSDbExist = $false
-            } else {
+            }
+            else {
                 $showMSDbExist = $true
             }
         }
         if (!$showtempDbMoreThanOneFile) {
             if (($showtempDbMoreThanOneFile -eq 0)) {
                 $showtempDbMoreThanOneFile = $false
-            } else {
+            }
+            else {
                 $showtempDbMoreThanOneFile = $true
             }
         }
         if (!$showmodelback) {
             if (($showmodelback -eq 0)) {
                 $showmodelback = $false
-            } else {
+            }
+            else {
                 $showmodelback = $true
             }
         }
         if (!$showmasterback) {
             if (($showmasterback -eq 0)) {
                 $showmasterback = $false
-            } else {
+            }
+            else {
                 $showmasterback = $true
             }
         }
         if (!$showmsdbback) {
             if (($showmsdbback -eq 0)) {
                 $showmsdbback = $false
-            } else {
+            }
+            else {
                 $showmsdbback = $true
             }
         }
         if (!$showdbback) {
             if (($showdbback -eq 0)) {
                 $showdbback = $false
-            } else {
+            }
+            else {
                 $showdbback = $true
             }
         }
         if (!$showDbIntegrityCheck) {
             if (($showDbIntegrityCheck -eq 0)) {
                 $showDbIntegrityCheck = $false
-            } else {
+            }
+            else {
                 $showDbIntegrityCheck = $true
             }
         }
@@ -278,6 +298,10 @@ function Get-ServerDiagnostics {
         
     }
     End {
+        #$output | Export-Csv -Path $outpuFile
+        $filePath = $outputFolder + "/" + $outputFile
+        $output | Out-File -Append $filePath -Encoding UTF8
+        Write-Host "Check the output at File "  $filePath -ForegroundColor Yellow
         return $output | Format-List
     }
 }

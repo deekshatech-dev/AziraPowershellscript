@@ -62,6 +62,28 @@ function Get-SSRSConiguration {
     Begin {
         $output = ""
         $v = 14
+        $outputFolder = "./Output/SSRSConfiguration"
+        $outputFile = "./SSRSConfiguration_" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".csv"
+        If (!(Test-Path $outputFolder)) {
+            New-Item -Path $outputFolder -ItemType Directory
+        }
+        If (!(Test-Path "./error_log")) {
+            New-Item -Path "./error_log" -ItemType Directory
+        }
+        try {
+            Import-Module SqlServer 
+            #           Import-Module SQLPS 
+            Import-Module dbatools 
+        }
+        catch {
+            "Installing Prerequistic....Please wait"
+            Install-Module dbatools -AllowClobber
+            Install-Module SqlServer -AllowClobber
+            Import-Module SqlServer 
+            #            Import-Module SQLPS 
+            Import-Module dbatools 
+
+        }
         $folderName = "/MyReportFolder"
         if (!$showssrsConnectionTimeout) {
             if (($showssrsConnectionTimeout -eq 0)) {
@@ -295,16 +317,17 @@ function Get-SSRSConiguration {
             }
         }
         catch {
-            $_
             $err = $_
-            $StackTrace = $_.ScriptStackTrace 
-            Set-Content -Path $erroFile -Value $err 
-            Set-Content -Path $erroFile -Value $StackTrace
+            $ErrorStackTrace = $_.ScriptStackTrace 
+            $ErrorBlock = ($err).ToString() + "`n`nStackTrace: " + ($ErrorStackTrace).ToString()
+            Set-Content -Path $erroFile -Value $ErrorBlock
+            "Some error occured check " + $erroFile + " for stacktrace"
         }
-       
-        
     }
     End {
+        $filePath = $outputFolder + "/" + $outputFile
+        $output | Out-File -Append $filePath -Encoding UTF8
+        Write-Host "Check the output at File "  $filePath -ForegroundColor Yellow
         return $output | Format-List
     }
 }

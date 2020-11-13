@@ -150,6 +150,7 @@ function Get-ServerDiagnostics {
         
     }
     End {
+        $output | Export-Csv -Path ".\Diagnostic_" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".csv"
         return $output | Format-List
     }
 }

@@ -16,59 +16,82 @@ function Get-MachineDetails {
     
     Param
     (
-        [Parameter(Mandatory = $false)]
-        $showtotalCpuCount,
-        [Parameter(Mandatory = $false)]
-        $showUpdateDateObject,
-        [Parameter(Mandatory = $false)]
-        $showRecommendedCPU,
-        [Parameter(Mandatory = $false)]
-        $showAZISService,
-        [Parameter(Mandatory = $false)]
-        $showAZTaskService,
-        [Parameter(Mandatory = $false)]
-        $showServerName,
-        [Parameter(Mandatory = $false)]
-        $showRam,
-        [Parameter(Mandatory = $false)]
-        $showWindowsVersion,
-        [Parameter(Mandatory = $false)]
-        $showis64BitOS,
-        [Parameter(Mandatory = $false)]
-        $showis64BitProcess,
-        [Parameter(Mandatory = $false)]
-        $showdomain,
-        [Parameter(Mandatory = $false)]
-        $showconnectionTimeout,
-        [Parameter(Mandatory = $false)]
-        $showssl2,
-        [Parameter(Mandatory = $false)]
-        $showssl3,
-        [Parameter(Mandatory = $false)]
-        $showtls,
-        [Parameter(Mandatory = $false)]
-        $showtls11,
-        [Parameter(Mandatory = $false)]
-        $showtls12,
-        [Parameter(Mandatory = $false)]
-        $showssslv2,
-        [Parameter(Mandatory = $false)]
-        $showssslv3,
-        [Parameter(Mandatory = $false)]
-        $showtsls11,
-        [Parameter(Mandatory = $false)]
-        $showstlsv12,
-        [Parameter(Mandatory = $false)]
-        $showstlsv10,
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$HostName = $args[0],
-        [string]$port = 443
+        [string]$port = $args[1],
+        [Parameter(Mandatory = $false)]
+        $showtotalCpuCount = $args[2],
+        [Parameter(Mandatory = $false)]
+        $showUpdateDateObject = $args[3],
+        [Parameter(Mandatory = $false)]
+        $showRecommendedCPU = $args[4],
+        [Parameter(Mandatory = $false)]
+        $showAZISService = $args[5],
+        [Parameter(Mandatory = $false)]
+        $showAZTaskService = $args[6],
+        [Parameter(Mandatory = $false)]
+        $showServerName = $args[7],
+        [Parameter(Mandatory = $false)]
+        $showRam = $args[8],
+        [Parameter(Mandatory = $false)]
+        $showWindowsVersion = $args[9],
+        [Parameter(Mandatory = $false)]
+        $showis64BitOS = $args[10],
+        [Parameter(Mandatory = $false)]
+        $showis64BitProcess = $args[11],
+        [Parameter(Mandatory = $false)]
+        $showdomain = $args[12],
+        [Parameter(Mandatory = $false)]
+        $showconnectionTimeout = $args[13],
+        [Parameter(Mandatory = $false)]
+        $showssl2 = $args[14],
+        [Parameter(Mandatory = $false)]
+        $showssl3 = $args[15],
+        [Parameter(Mandatory = $false)]
+        $showtls = $args[16],
+        [Parameter(Mandatory = $false)]
+        $showtls11 = $args[17],
+        [Parameter(Mandatory = $false)]
+        $showtls12 = $args[18],
+        [Parameter(Mandatory = $false)]
+        $showssslv2 = $args[19],
+        [Parameter(Mandatory = $false)]
+        $showssslv3 = $args[20],
+        [Parameter(Mandatory = $false)]
+        $showtsls11 = $args[21],
+        [Parameter(Mandatory = $false)]
+        $showstlsv12 = $args[22],
+        [Parameter(Mandatory = $false)]
+        $showstlsv10 = $args[23]
+        
     )
 
     Begin {
         $output = ""
         $totalspace = 0
+        $outputFolder = "./Output/Application"
+        $outputFile = "./Application_" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".csv"
+        If (!(Test-Path $outputFolder)) {
+            New-Item -Path $outputFolder -ItemType Directory
+        }
+        If (!(Test-Path "./error_log")) {
+            New-Item -Path "./error_log" -ItemType Directory
+        }
+        try {
+            Import-Module SqlServer 
+            #           Import-Module SQLPS 
+            Import-Module dbatools 
+        }
+        catch {
+            "Installing Prerequistic....Please wait"
+            Install-Module dbatools -AllowClobber
+            Install-Module SqlServer -AllowClobber
+            Import-Module SqlServer 
+            #            Import-Module SQLPS 
+            Import-Module dbatools 
+
+        }
     }
     Process {
         $erroFile = "./error_log/application" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString()
@@ -297,11 +320,21 @@ function Test-ServerSSLSupport {
             }
         }
         catch {
-            $err = $_ + $_.ScriptStackTrace 
-            Set-Content -Path $erroFile -Value $err 
+            $err = $_
+            $ErrorStackTrace = $_.ScriptStackTrace 
+            $ErrorBlock = ($err).ToString() + "`n`nStackTrace: " + ($ErrorStackTrace).ToString()
+            Set-Content -Path $erroFile -Value $ErrorBlock
+            "Some error occured check " + $erroFile + " for stacktrace"
         }
         
         # $RetValue 
+    }
+    End {
+        #$output | Export-Csv -Path $outpuFile
+        $filePath = $outputFolder + "/" + $outputFile
+        $output | Out-File -Append $filePath -Encoding UTF8
+        Write-Host "Check the output at File "  $filePath -ForegroundColor Yellow
+        return $output | Format-List
     }
 }
 

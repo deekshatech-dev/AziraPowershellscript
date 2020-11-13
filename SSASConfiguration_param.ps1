@@ -17,25 +17,25 @@ function Get-SSASConfiguration {
     Param
     (
         [Parameter(Mandatory = $false)]
-        $showWindowsVersion,
+        $showWindowsVersion = $args[0],
         [Parameter(Mandatory = $false)]
-        $showWindowsServer,
+        $showWindowsServer = $args[1],
         [Parameter(Mandatory = $false)]
-        $showssasConnectionTimeout,
+        $showssasConnectionTimeout = $args[2],
         [Parameter(Mandatory = $false)]
-        $showAdministrator,
+        $showAdministrator = $args[3],
         [Parameter(Mandatory = $false)]
-        $showssasVersion,
+        $showssasVersion = $args[4],
         [Parameter(Mandatory = $false)]
-        $showssasVsSqlVersion,
+        $showssasVsSqlVersion = $args[5],
         [Parameter(Mandatory = $false)]
-        $showssasServerMode,
+        $showssasServerMode = $args[6],
         [Parameter(Mandatory = $false)]
-        $showssasCollation,
+        $showssasCollation = $args[7],
         [Parameter(Mandatory = $false)]
-        $showssasCubes,
+        $showssasCubes = $args[8],
         [Parameter(Mandatory = $false)]
-        $showssasEdition
+        $showssasEdition = $args[9]
         # [Parameter(Mandatory=$false)]
         # $show,
     )
@@ -43,7 +43,108 @@ function Get-SSASConfiguration {
     Begin {
         $output = ""
         $totalspace = 0
-        
+        $outputFolder = "./Output/SSASConfiguration"
+        $outputFile = "./SSASConfiguration_" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".csv"
+        If (!(Test-Path $outputFolder)) {
+            New-Item -Path $outputFolder -ItemType Directory
+        }
+        If (!(Test-Path "./error_log")) {
+            New-Item -Path "./error_log" -ItemType Directory
+        }
+        try {
+            Import-Module SqlServer 
+            #           Import-Module SQLPS 
+            Import-Module dbatools 
+        }
+        catch {
+            "Installing Prerequistic....Please wait"
+            Install-Module dbatools -AllowClobber
+            Install-Module SqlServer -AllowClobber
+            Import-Module SqlServer 
+            #            Import-Module SQLPS 
+            Import-Module dbatools 
+
+        }
+        if (!$showWindowsVersion) {
+            if (($showWindowsVersion -eq 0)) {
+                $showWindowsVersion = $false
+            }
+            else {
+                $showWindowsVersion = $true
+            }
+        }
+        if (!$showWindowsServer) {
+            if (($showWindowsServer -eq 0)) {
+                $showWindowsServer = $false
+            }
+            else {
+                $showWindowsServer = $true
+            }
+        }
+        if (!$showssasConnectionTimeout) {
+            if (($showssasConnectionTimeout -eq 0)) {
+                $showssasConnectionTimeout = $false
+            }
+            else {
+                $showssasConnectionTimeout = $true
+            }
+        }
+        if (!$showAdministrator) {
+            if (($showAdministrator -eq 0)) {
+                $showAdministrator = $false
+            }
+            else {
+                $showAdministrator = $true
+            }
+        }
+        if (!$showssasVersion) {
+            if (($showssasVersion -eq 0)) {
+                $showssasVersion = $false
+            }
+            else {
+                $showssasVersion = $true
+            }
+        }
+        if (!$showssasVsSqlVersion) {
+            if (($showssasVsSqlVersion -eq 0)) {
+                $showssasVsSqlVersion = $false
+            }
+            else {
+                $showssasVsSqlVersion = $true
+            }
+        }
+        if (!$showssasServerMode) {
+            if (($showssasServerMode -eq 0)) {
+                $showssasServerMode = $false
+            }
+            else {
+                $showssasServerMode = $true
+            }
+        }
+        if (!$showssasCollation) {
+            if (($showssasCollation -eq 0)) {
+                $showssasCollation = $false
+            }
+            else {
+                $showssasCollation = $true
+            }
+        }
+        if (!$showssasCubes) {
+            if (($showssasCubes -eq 0)) {
+                $showssasCubes = $false
+            }
+            else {
+                $showssasCubes = $true
+            }
+        }
+        if (!$showssasEdition) {
+            if (($showssasEdition -eq 0)) {
+                $showssasEdition = $false
+            }
+            else {
+                $showssasEdition = $true
+            }
+        }
     }
     Process {   
         $erroFile = "./error_log/ssasconfig_" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".txt"
@@ -112,13 +213,17 @@ function Get-SSASConfiguration {
             }
         }
         catch {
-            $err = $_ + $_.ScriptStackTrace 
-            Set-Content -Path $erroFile -Value $err 
+            $err = $_
+            $ErrorStackTrace = $_.ScriptStackTrace 
+            $ErrorBlock = ($err).ToString() + "`n`nStackTrace: " + ($ErrorStackTrace).ToString()
+            Set-Content -Path $erroFile -Value $ErrorBlock
+            "Some error occured check " + $erroFile + " for stacktrace"
         }
-       
-
     }
     End {
+        $filePath = $outputFolder + "/" + $outputFile
+        $output | Out-File -Append $filePath -Encoding UTF8
+        Write-Host "Check the output at File "  $filePath -ForegroundColor Yellow
         return $output | Format-List
     }
 }
