@@ -18,35 +18,51 @@ function Get-ServerDiagnostics {
     (
         # [Parameter(Mandatory=$false)]
         #$RemoteComputerName
+        [Parameter(Mandatory = $true)]
+        [string]$database = $args[0],
         [Parameter(Mandatory = $false)]
-        $showServerName = $args[0],
+        $showServerName = $args[1],
         [Parameter(Mandatory = $false)]
-        $showDbName = $args[1],
+        $showDbName = $args[2],
         [Parameter(Mandatory = $false)]
-        $showtempDbExist = $args[2],
+        $showtempDbExist = $args[3],
         [Parameter(Mandatory = $false)]
-        $showmodelDbExist = $args[3],
+        $showmodelDbExist = $args[4],
         [Parameter(Mandatory = $false)]
-        $showmasterDbExist = $args[4],
+        $showmasterDbExist = $args[5],
         [Parameter(Mandatory = $false)]
-        $showMSDbExist = $args[5],
+        $showMSDbExist = $args[6],
         [Parameter(Mandatory = $false)]
-        $showtempDbMoreThanOneFile = $args[6],
+        $showtempDbMoreThanOneFile = $args[7],
         [Parameter(Mandatory = $false)]
-        $showmodelback = $args[7],
+        $showmodelback = $args[8],
         [Parameter(Mandatory = $false)]
-        $showmasterback = $args[8],
+        $showmasterback = $args[9],
         [Parameter(Mandatory = $false)]
-        $showmsdbback = $args[9],
+        $showmsdbback = $args[10],
         [Parameter(Mandatory = $false)]
-        $showdbback = $args[10],
+        $showdbback = $args[11],
         [Parameter(Mandatory = $false)]
-        $showDbIntegrityCheck = $args[11]
+        $showDbIntegrityCheck = $args[12]
     )
 
     Begin {
         $output = ""
         $totalspace = 0
+        try {
+            Import-Module SqlServer 
+ #           Import-Module SQLPS 
+            Import-Module dbatools 
+        }
+        catch {
+            "Installing Prerequistic....Please wait"
+            Install-Module dbatools -AllowClobber
+            Install-Module SqlServer -AllowClobber
+            Import-Module SqlServer 
+#            Import-Module SQLPS 
+            Import-Module dbatools 
+
+        }
         if (!$showServerName) {
             if (($showServerName -eq 0)) {
                 $showServerName = $false
@@ -140,13 +156,25 @@ function Get-ServerDiagnostics {
             if ($showServerName) {
                 $output += "`n server_name: $server_name"
             }
-            $dbName = "PowershellDB"
+            $dbName = $database
             if ($showDbName) {
                 $output += "`n dbName: $dbName"
             }
             $instanceName = "localhost"
             $server = New-Object -TypeName Microsoft.SqlServer.Management.Smo.Server -ArgumentList $instanceName
-        
+            $databases = $server.Databases
+            $databaseExist = $false
+            foreach ($db in $databases) {
+                If ($db.Name -like $database) {
+                    $databaseExist = $true
+                }
+            }
+            if ($databaseExist) {
+                
+            }
+            else {
+                $database += " does not Exist!"
+            }
             $folder = $server.Information.MasterDBLogPath
             $tempFileCount = 0
             $tempDbExist = "Does Not Exists"
@@ -192,10 +220,6 @@ function Get-ServerDiagnostics {
             if ($showtempDbMoreThanOneFile) {
                 $output += "`n tempdbMoreThanOneFile: $tempdbMoreThanOneFile"
             }
-            
-            
-            
-            
         
             $backupFolder = $server.Settings.BackupDirectory        
 
@@ -245,8 +269,11 @@ function Get-ServerDiagnostics {
             }
         }
         catch {
-            $err = $_ + $_.ScriptStackTrace 
-            Set-Content -Path $erroFile -Value $err 
+            $err = $_
+            $ErrorStackTrace = $_.ScriptStackTrace 
+            $ErrorBlock = ($err).ToString() + "`n`nStackTrace: " + ($ErrorStackTrace).ToString()
+            Set-Content -Path $erroFile -Value $ErrorBlock
+            "Some error occured check " + $erroFile + " for stacktrace"
         }
         
     }
