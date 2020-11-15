@@ -16,34 +16,30 @@ function Get-ServerDiagnostics {
     
     Param
     (
-        # [Parameter(Mandatory=$false)]
-        #$RemoteComputerName
-        [Parameter(Mandatory = $true)]
-        $database = $args[0],
         [Parameter(Mandatory = $false)]
-        $showServerName = $args[1],
+        $showServerName = $args[0],
         [Parameter(Mandatory = $false)]
-        $showDbName = $args[2],
+        $showDbName = $args[1],
         [Parameter(Mandatory = $false)]
-        $showtempDbExist = $args[3],
+        $showtempDbExist = $args[2],
         [Parameter(Mandatory = $false)]
-        $showmodelDbExist = $args[4],
+        $showmodelDbExist = $args[3],
         [Parameter(Mandatory = $false)]
-        $showmasterDbExist = $args[5],
+        $showmasterDbExist = $args[4],
         [Parameter(Mandatory = $false)]
-        $showMSDbExist = $args[6],
+        $showMSDbExist = $args[5],
         [Parameter(Mandatory = $false)]
-        $showtempDbMoreThanOneFile = $args[7],
+        $showtempDbMoreThanOneFile = $args[6],
         [Parameter(Mandatory = $false)]
-        $showmodelback = $args[8],
+        $showmodelback = $args[7],
         [Parameter(Mandatory = $false)]
-        $showmasterback = $args[9],
+        $showmasterback = $args[8],
         [Parameter(Mandatory = $false)]
-        $showmsdbback = $args[10],
+        $showmsdbback = $args[9],
         [Parameter(Mandatory = $false)]
-        $showdbback = $args[11],
+        $showdbback = $args[10],
         [Parameter(Mandatory = $false)]
-        $showDbIntegrityCheck = $args[12]
+        $showDbIntegrityCheck = $args[11]
     )
 
     Begin {
@@ -176,25 +172,14 @@ function Get-ServerDiagnostics {
             if ($showServerName) {
                 $output += "`n server_name: $server_name"
             }
-            $dbName = $database
-            if ($showDbName) {
-                $output += "`n dbName: $dbName"
-            }
+           # $dbName = $database
+            # if ($showDbName) {
+            #     $output += "`n dbName: $dbName"
+            # }
             $instanceName = "localhost"
             $server = New-Object -TypeName Microsoft.SqlServer.Management.Smo.Server -ArgumentList $instanceName
-            $databases = $server.Databases
-            $databaseExist = $false
-            foreach ($db in $databases) {
-                If ($db.Name -like $database) {
-                    $databaseExist = $true
-                }
-            }
-            if ($databaseExist) {
-                
-            }
-            else {
-                $database += " does not Exist!"
-            }
+            
+          
             $folder = $server.Information.MasterDBLogPath
             $tempFileCount = 0
             $tempDbExist = "Does Not Exists"
@@ -242,7 +227,6 @@ function Get-ServerDiagnostics {
             }
         
             $backupFolder = $server.Settings.BackupDirectory        
-
             $modelback = "Never"
             $masterback = "Never"
             $msdbback = "Never"
@@ -258,22 +242,33 @@ function Get-ServerDiagnostics {
                 if ($file.Name -Contains "MSDB") {
                     $msdbback = $file.LastWriteTime
                 }
-                if ($file.Name -Contains $dbName) {
-                    $dbback = $file.LastWriteTime
+               
+                $databases = $server.Databases
+                # "3"
+                # $server.Databases
+                # "4"
+                foreach ($db in $databases) {
+                    if ($showDbName) {
+                        $output += "`n Database: " + $db.Name
+                    }
+                    if ($file.Name -Contains $db.Name) {
+                        $dbback = $file.LastWriteTime
+                        if ($showdbback) {
+                            $output += "`n " + $db.Name + " Database backup performed : $dbback"
+                        }
+                    }
                 }
             }
             if ($showmodelback) {
-                $output += "`n modelback: $modelback"
+                $output += "`n Model Database backup performed: $modelback"
             }
             if ($showmasterback) {
-                $output += "`n masterback: $masterback"
+                $output += "`n Master Database backup performed: $masterback"
             }
             if ($showmsdbback) {
-                $output += "`n msdbback: $msdbback"
+                $output += "`n MSDB Database backup performed: $msdbback"
             }
-            if ($showdbback) {
-                $output += "`n dbback: $dbback"
-            }
+            
             $DbIntegrityCheckDate = $server.Databases[3].ExecuteWithResults("DBCC DBINFO () WITH TABLERESULTS").Tables[0] | Where-Object { $_.Field -eq "dbi_dbccLastKnownGood" }  | Select-Object Value
             $twoWeekBackDate = (Get-Date).AddDays(-14)
         
@@ -295,7 +290,6 @@ function Get-ServerDiagnostics {
             Set-Content -Path $erroFile -Value $ErrorBlock
             "Some error occured check " + $erroFile + " for stacktrace"
         }
-        
     }
     End {
         #$output | Export-Csv -Path $outpuFile

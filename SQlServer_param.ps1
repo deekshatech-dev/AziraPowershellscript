@@ -468,13 +468,27 @@ function Get-MachineDetails {
             $output += "`n Sql Server  Details"
             $output += "`n================================================"
             $ServerName = $env:COMPUTERNAME
+
+             
+            $CPUCore = (Get-CIMInstance -Class 'CIM_Processor').NumberOfCores
+            $RAM = (systeminfo | Select-String 'Total Physical Memory:').ToString().Split(':')[1].Trim()
+            $drives = Get-WmiObject Win32_LogicalDisk -ComputerName $ServerName | Select -Property Size
+            
+            foreach ($drive  in $drives) {
+                $drivename = $drive. -split ":"
+                if (($drivename -ne "A") -and ($drivename -ne "B")) {
+                    $totalspace += [int]($drive.Size / 1GB)
+                }
+            }
+            $RAMGB = [int]($RAM.Split(' ')[0].Trim() / 1024) 
+            
             if ($showServerName) {
                 $output += "`n Server Name : " + $ServerName
             }
             if ($showRecomendedCpu) {
                 $output += "`n Recommended [SQL Server] : CPUCore=" + $CPUCore + ",RAM=" + $RAMGB + " GB,DISK=" + $totalspace + " GB"
             }
-            if (showSqlProductDetails) {
+            if ($showSqlProductDetails) {
                 $SqlProductDetails = (Invoke-SqlCmd -query "select @@version" -ServerInstance "localhost").Column1
                 $output += "`n SqlProductDetails: $SqlProductDetails"
             }
@@ -537,18 +551,7 @@ function Get-MachineDetails {
                 $output += "`n PORT: $SQLPort"
             }
            
-            
-            $CPUCore = (Get-CIMInstance -Class 'CIM_Processor').NumberOfCores
-            $RAM = (systeminfo | Select-String 'Total Physical Memory:').ToString().Split(':')[1].Trim()
-            $drives = Get-WmiObject Win32_LogicalDisk -ComputerName $ServerName | Select -Property Size
-            
-            foreach ($drive  in $drives) {
-                $drivename = $drive. -split ":"
-                if (($drivename -ne "A") -and ($drivename -ne "B")) {
-                    $totalspace += [int]($drive.Size / 1GB)
-                }
-            }
-            $RAMGB = [int]($RAM.Split(' ')[0].Trim() / 1024) 
+           
             
             
             if ($showNumberFormat) {
