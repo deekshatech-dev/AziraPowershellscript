@@ -11,6 +11,7 @@
     Version: 0.1 
     DateCreated: 14th Oct 2020
 #>
+"Application Configuration Details: OS Details, Machine Name, RAM Details, Memory details and Allocation, SQL Server Timeout,  SSL/TLS Details for Client and Sserver, CPU details,etc."
 
 function Get-MachineDetails {
     
@@ -90,33 +91,185 @@ function Get-MachineDetails {
             Import-Module SqlServer 
             #            Import-Module SQLPS 
             Import-Module dbatools 
+        }
+        if (!$showtotalCpuCount) {
+            if (($showtotalCpuCount -eq 0)) {
+                $showtotalCpuCount = $false
+            } else {
+                $showtotalCpuCount = $true
+            }
+        }
+        if (!$showUpdateDateObject) {
+            if (($showUpdateDateObject -eq 0)) {
+                $showUpdateDateObject = $false
+            } else {
+                $showUpdateDateObject = $true
+            }
+        }
+        if (!$showRecommendedCPU) {
+            if (($showRecommendedCPU -eq 0)) {
+                $showRecommendedCPU = $false
+            } else {
+                $showRecommendedCPU = $true
+            }
+        }
+        if (!$showAZISService) {
+            if (($showAZISService -eq 0)) {
+                $showAZISService = $false
+            } else {
+                $showAZISService = $true
+            }
+        }
+        if (!$showAZTaskService) {
+            if (($showAZTaskService -eq 0)) {
+                $showAZTaskService = $false
+            } else {
+                $showAZTaskService = $true
+            }
+        }
+        if (!$showServerName) {
+            if (($showServerName -eq 0)) {
+                $showServerName = $false
+            } else {
+                $showServerName = $true
+            }
+        }
+        if (!$showRam) {
+            if (($showRam -eq 0)) {
+                $showRam = $false
+            } else {
+                $showRam = $true
+            }
+        }
+        if (!$showWindowsVersion) {
+            if (($showWindowsVersion -eq 0)) {
+                $showWindowsVersion = $false
+            } else {
+                $showWindowsVersion = $true
+            }
+        }
+        if (!$showis64BitOS) {
+            if (($showis64BitOS -eq 0)) {
+                $showis64BitOS = $false
+            } else {
+                $showis64BitOS = $true
+            }
+        }
+        if (!$showis64BitProcess) {
+            if (($showis64BitProcess -eq 0)) {
+                $showis64BitProcess = $false
+            } else {
+                $showis64BitProcess = $true
+            }
+        }
+        if (!$showdomain) {
+            if (($showdomain -eq 0)) {
+                $showdomain = $false
+            } else {
+                $showdomain = $true
+            }
+        }
+        if (!$showconnectionTimeout) {
+            if (($showconnectionTimeout -eq 0)) {
+                $showconnectionTimeout = $false
+            } else {
+                $showconnectionTimeout = $true
+            }
+        }
+        if (!$showssl2) {
+            if (($showssl2 -eq 0)) {
+                $showssl2 = $false
+            } else {
+                $showssl2 = $true
+            }
+        }
+        if (!$showssl3) {
+            if (($showssl3 -eq 0)) {
+                $showssl3 = $false
+            } else {
+                $showssl3 = $true
+            }
+        }
+        if (!$showtls) {
+            if (($showtls -eq 0)) {
+                $showtls = $false
+            } else {
+                $showtls = $true
+            }
+        }
 
+        if (!$showtls11) {
+            if (($showtls11 -eq 0)) {
+                $showtls11 = $false
+            } else {
+                $showtls11 = $true
+            }
+        }
+        if (!$showtls12) {
+            if (($showtls12 -eq 0)) {
+                $showtls12 = $false
+            } else {
+                $showtls12 = $true
+            }
+        }
+        if (!$showssslv2) {
+            if (($showssslv2 -eq 0)) {
+                $showssslv2 = $false
+            } else {
+                $showssslv2 = $true
+            }
+        }
+        if (!$showssslv3) {
+            if (($showssslv3 -eq 0)) {
+                $showssslv3 = $false
+            } else {
+                $showssslv3 = $true
+            }
+        }
+        if (!$showtsls11) {
+            if (($showtsls11 -eq 0)) {
+                $showtsls11 = $false
+            } else {
+                $showtsls11 = $true
+            }
+        }
+        if (!$showstlsv12) {
+            if (($showstlsv12 -eq 0)) {
+                $showstlsv12 = $false
+            } else {
+                $showstlsv12 = $true
+            }
+        }
+        if (!$showstlsv10) {
+            if (($showstlsv10 -eq 0)) {
+                $showstlsv10 = $false
+            } else {
+                $showstlsv10 = $true
+            }
         }
     }
     Process {
         $erroFile = "./error_log/application" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString()
         
         try {
+            if($port -eq ""){
+                $port = 443
+            }
             $CPUCore = (Get-CIMInstance -Class 'CIM_Processor').NumberOfCores
             $UpdateDateObject = ((New-Object -com "Microsoft.Update.AutoUpdate").Results | select -Property LastInstallationSuccessDate).LastInstallationSuccessDate
             $RAM = (systeminfo | Select-String 'Total Physical Memory:').ToString().Split(':')[1].Trim()
             $ServerName = $env:COMPUTERNAME
             $drives = Get-WmiObject Win32_LogicalDisk -ComputerName $ServerName | Select -Property Size
-            $output += "Server Name : " + $ServerName
             foreach ($drive  in $drives) {
                 $drivename = $drive. -split ":"
                 if (($drivename -ne "A") -and ($drivename -ne "B")) {
                     $totalspace += [int]($drive.Size / 1GB)
                 }
             }
+             if($UpdateDateObject -eq "01/01/1601"){
+                $UpdateDateObject = "N/A"
+            }
             $totalCpuCount = ( Invoke-Sqlcmd -Query "SELECT i.cpu_count from sys.dm_os_sys_info i").cpu_count
-            if ($showtotalCpuCount) {
-                $output += "`nTotal CPU Count $totalCpuCount"
-            }
-            if ($showUpdateDateObject) {
-                $output += "`nLast Update Dates $UpdateDateObject"
-            }
-    
             $WindowsVersion = (systeminfo | Select-String 'OS Version:')[0].ToString().Split(':')[1].Trim()
             $is64BitOS = [System.Environment]::Is64BitOperatingSystem
             $is64BitProcess = [System.Environment]::Is64BitProcess
@@ -125,38 +278,10 @@ function Get-MachineDetails {
             $domain = (Get-WmiObject Win32_ComputerSystem).Domain
     
             $RAMGB = [int]($RAM.Split(' ')[0].Trim() / 1024) 
-            if ($showRecommendedCPU) {
-                $output += "`nRecommended [SQL Server] : CPUCore=" + $CPUCore + ",RAM=" + $RAMGB + " GB,DISK=" + $totalspace + " GB"
-            }
-            if ($showAZISService) {
-                $output += "`nWindows Service [AZ IS Scheduler Service]:" + $AZISService
-            }
-            if ($showAZTaskService) {
-                $output += "`nWindows Service [AZ Task Scheduler Service]:" + $AZTaskService
-            }
-            if ($showServerName) {
-                $output += "`nWindows Sever:" + $ServerName
-            }
-            if ($showWindowsVersion) {
-                $output += "`nWindows Version:" + $WindowsVersion
-            }
-            if ($showis64BitOS) {
-                $output += "`nIs 64 Bit OS:" + $is64BitOS
-            }
-            if ($showis64BitProcess) {
-                $output += "`nIs 64 Bit Process:" + $is64BitProcess
-            }
-            if ($showdomain) {
-                $output += "`nDomain:" + $domain
-            }
-            if ($showRam) {
-                $output += "`nTotal Physical Memory:" + $RAMGB + " GB"
-            }
+          
+            
 
             $connectionTimeout = ( Invoke-Sqlcmd -Query "sp_configure 'Remote Query Timeout'").config_value
-            if ($showconnectionTimeout) {
-                $output += "`n Connection Timeout: $connectionTimeout"
-            }
             
             $enabledProtocols = [enum]::GetNames([Net.SecurityProtocolType])
             $ssl2 = "Disabled"
@@ -180,21 +305,7 @@ function Get-MachineDetails {
             if ($enabledProtocols -contains 'Tls12') {
                 $tls12 = "Enabled"
             } 
-            if ($showssl2) {
-                $output += "`nSecurity [Client SSL 2.0] Is Client SSL 2.0 is " + $ssl2
-            }
-            if ($showssl3) {
-                $output += "`nSecurity [Client SSL 3.0] Is Client SSL 3.0 is " + $ssl3
-            }
-            if ($showtls) {
-                $output += "`nSecurity [Client TLS 1.0] Is Client TLS 1.0 is " + $tls
-            }
-            if ($showtls11) {
-                $output += "`nSecurity [Client TLS 1.1] Is Client TLS 1.1 is " + $tls11
-            }
-            if ($showtls12) {
-                $output += "`nSecurity [Client TLS 1.2] Is Client TLS 1.2 is " + $tls12
-            }
+           
 
             $erroFile = "./error_log/applicationserverssl" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".txt"
 
@@ -211,7 +322,7 @@ function Get-MachineDetails {
             }
             "ssl2", "ssl3", "tls", "tls11", "tls12" | % {
                 $TcpClient = New-Object Net.Sockets.TcpClient
-                $TcpClient.Connect($RetValue.Host, $RetValue.Port)
+                $TcpClient.Connect($RetValue.Host, [int]$RetValue.Port)
                 $SslStream = New-Object Net.Security.SslStream $TcpClient.GetStream()
                 $SslStream.ReadTimeout = 15000
                 $SslStream.WriteTimeout = 15000
@@ -238,6 +349,61 @@ function Get-MachineDetails {
             $stlsv10 = If ($RetValue.TLSv1_0) { "Enabled" } Else { "Disabled" }
             $stlsv11 = If ($RetValue.TLSv1_1) { "Enabled" } Else { "Disabled" }
             $stlsv12 = If ($RetValue.TLSv1_2 ) { "Enabled" } Else { "Disabled" }
+
+            if ($showtotalCpuCount) {
+                $output += "`nTotal CPU Count $totalCpuCount"
+            }
+            if ($showUpdateDateObject) {
+                $output += "`nLast Update Dates $UpdateDateObject"
+            }
+            if ($showAZISService) {
+                $output += "`nWindows Service [AZ IS Scheduler Service]:" + $AZISService
+            }
+            if ($showAZTaskService) {
+                $output += "`nWindows Service [AZ Task Scheduler Service]:" + $AZTaskService
+            }
+            if ($showServerName) {
+                $output += "`nWindows Sever:" + $ServerName
+                $output += "`nWorkstation Name : " + $ServerName
+            }
+            if ($showWindowsVersion) {
+                $output += "`nWindows Version:" + $WindowsVersion
+            }
+            if ($showis64BitOS) {
+                $output += "`nIs 64 Bit OS:" + $is64BitOS
+            }
+            if ($showis64BitProcess) {
+                $output += "`nIs 64 Bit Process:" + $is64BitProcess
+            }
+            if ($showdomain) {
+                $output += "`nDomain:" + $domain
+            }
+            if ($showRam) {
+                $output += "`nTotal Physical Memory:" + $RAMGB + " GB"
+            }
+
+            $output += "`n================================================"
+            $output += "`nClient Security Protocols"
+            $output += "`n================================================"
+            if ($showssl2) {
+                $output += "`nSecurity [Client SSL 2.0] Is Client SSL 2.0 is " + $ssl2
+            }
+            if ($showssl3) {
+                $output += "`nSecurity [Client SSL 3.0] Is Client SSL 3.0 is " + $ssl3
+            }
+            if ($showtls) {
+                $output += "`nSecurity [Client TLS 1.0] Is Client TLS 1.0 is " + $tls
+            }
+            if ($showtls11) {
+                $output += "`nSecurity [Client TLS 1.1] Is Client TLS 1.1 is " + $tls11
+            }
+            if ($showtls12) {
+                $output += "`nSecurity [Client TLS 1.2] Is Client TLS 1.2 is " + $tls12
+            }
+            $output += "`n================================================"
+            $output += "`n================================================"
+            $output += "`nServer Security Protocols"
+            $output += "`n================================================"
             if ($showssslv2) {
                 $output += "`nSecurity [Server SSL 2.0] Is Client SSL 2.0 is " + $ssslv2
             }
@@ -256,7 +422,14 @@ function Get-MachineDetails {
             if ($showstlsv12) {
                 $output += "`nSecurity [Server TLS 1.2] Is Client TLS 1.2 is " + $stlsv12
             }
-            
+            $output += "`n================================================"
+
+            if ($showconnectionTimeout){
+                $output += "`nSql Server Connection Timeout: $connectionTimeout"
+            }
+            if ($showRecommendedCPU) {
+                $output += "`nRecommended [SQL Server] : CPUCore=" + $CPUCore + ",RAM=" + $RAMGB + " GB,DISK=" + $totalspace + " GB"
+            }
         }
         catch {
             $err = $_

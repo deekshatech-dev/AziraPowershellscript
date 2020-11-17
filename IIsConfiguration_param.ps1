@@ -11,6 +11,7 @@
     Version: 0.1 
     DateCreated: 14th Oct 2020
 #>
+"IIS Configuration Details: Installed IIS Features count & List, IIS Connection Timeout,  .NET framework details, Compression strategies status, etc."
 
 function Get-IIsConfiguration {
     
@@ -56,7 +57,28 @@ function Get-IIsConfiguration {
     Begin {
         $output = ""
         $totalspace = 0
-        # Import-Module WebAdministration
+        $outputFolder = "./Output/IISConfiguration"
+        $outputFile = "./IISConfiguration_" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".csv"
+        If (!(Test-Path $outputFolder)) {
+            New-Item -Path $outputFolder -ItemType Directory
+        }
+        If (!(Test-Path "./error_log")) {
+            New-Item -Path "./error_log" -ItemType Directory
+        }
+        try {
+            Import-Module SqlServer 
+            #           Import-Module SQLPS 
+            Import-Module dbatools 
+        }
+        catch {
+            "Installing Prerequistic....Please wait"
+            Install-Module dbatools -AllowClobber
+            Install-Module SqlServer -AllowClobber
+            Import-Module SqlServer 
+            #            Import-Module SQLPS 
+            Import-Module dbatools 
+
+        }
         if (!$showWindowsVersion) {
             if (($showWindowsVersion -eq 0)) {
                 $showWindowsVersion = $false
@@ -168,7 +190,26 @@ function Get-IIsConfiguration {
                 $output += "`n =============================="
                 $featureNames = ''
                 foreach ($item in $featuresList) {
-                    $tempName = $item.FeatureName
+                    $featureName = $item.FeatureName
+                    $tempObj = Get-WindowsOptionalFeature -online -FeatureName $item.FeatureName
+                    $displayName = $tempObj.DisplayName
+                    $description = $tempObj.Description
+                    $state = $tempObj.State
+                    if ($tempObj.CustomProperties.count -gt 0) {
+                        $customProperties = $tempObj.CustomProperties
+                    }
+                    else {
+                        $customProperties = "N/A"
+                    }
+                    $tempName = "`n ==========================================="
+                    $tempName += "`n $featureName Description:"
+                    $tempName += "`n ==========================================="
+                    $tempName += "`n Feature Name: $featureName"
+                    $tempName += "`n Display Name: $displayName"
+                    $tempName += "`n State: $state"
+                    $tempName += "`n Description: $description"
+                    $tempName += "`n Custom Property: $customProperties"
+                    $tempName += "`n ==========================================="
                     $featureNames += "`n $tempName"
                 }
                 
@@ -183,20 +224,19 @@ function Get-IIsConfiguration {
                 $output += "`n IIS Connection Timeout: $timeout"
                 
                 $IisSites = Get-IISSite | Select -Property Name
-                $output += "`n IIS Hosted Websites: $IisSites"
-                
-                $dotNet35 = Get-WindowsOptionalFeature -Online | Where-Object { ($_.FeatureName -like "NETFx3") } | select -Property State
-                if ($dotNet35.State -like "Enabled") {
-                    $output += "`n .NET Framework 3.5 including all sub-features are INSTALLED"
+                $output += "`n ==========================================="
+                $output += "`n IIS Hosted Websites:"
+                $output += "`n ==========================================="
+                foreach ($item in $IisSites) {
+                    $websiteName = $item.Name
+                    $output += "`n $websiteName"
                 }
+                $output += "`n ==========================================="
                 
-
-                # $features = Get-WindowsOptionalFeature -Online | Where-Object { ($_.FeatureName -like 'IIS-*') -AND ($_.State -eq 'Enabled') };
                 # $FTPfeatures = Get-WindowsOptionalFeature -Online | Where-Object { ($_.FeatureName -like 'IIS-FTP*') -AND ($_.State -eq "Enabled") };
                 # $totalfeatures = Get-WindowsOptionalFeature -Online | Where-Object { ($_.FeatureName -like 'IIS-*') };
                 # $runningWebservices = ($features.Length - $FTPfeatures.Length).ToString() + " of " + ($totalfeatures.Length).ToString() + " Installed"
                 # $output += "`n Web Server IIS Role and Sub Features except FTP: $runningWebservices"
-
             }
 
             if ($ShowDotNet35Status) {
@@ -276,11 +316,17 @@ function Get-IIsConfiguration {
             }
         }
         catch {
-            $err = $_ + $_.ScriptStackTrace 
-            Set-Content -Path $erroFile -Value $err 
+            $err = $_
+            $ErrorStackTrace = $_.ScriptStackTrace 
+            $ErrorBlock = ($err).ToString() + "`n`nStackTrace: " + ($ErrorStackTrace).ToString()
+            Set-Content -Path $erroFile -Value $ErrorBlock
+            "Some error occured check " + $erroFile + " for stacktrace"
         }
     }
     End {
+        $filePath = $outputFolder + "/" + $outputFile
+        $output | Out-File -Append $filePath -Encoding UTF8
+        Write-Host "Check the output at File "  $filePath -ForegroundColor Yellow
         return $output | Format-List
     }
 }

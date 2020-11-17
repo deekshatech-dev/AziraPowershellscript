@@ -11,6 +11,7 @@
     Version: 0.1 
     DateCreated: 14th Oct 2020
 #>
+"Get SSRS Configuration Details: SSRS Connection Timeout, SSRS Instance Name, Version, DB name, Webservice URL, Report Manager URL, Content Manager, Email Settings, Secure Connection,SSRS Database Files and sizes."
 
 function GetParamValue($paramValue) {
     "funinside"
@@ -61,7 +62,6 @@ function Get-SSRSConiguration {
 
     Begin {
         $output = ""
-        $v = 14
         $outputFolder = "./Output/SSRSConfiguration"
         $outputFile = "./SSRSConfiguration_" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".csv"
         If (!(Test-Path $outputFolder)) {
@@ -84,7 +84,7 @@ function Get-SSRSConiguration {
             Import-Module dbatools 
 
         }
-        $folderName = "/MyReportFolder"
+        $folderName = "/"
         if (!$showssrsConnectionTimeout) {
             if (($showssrsConnectionTimeout -eq 0)) {
                 $showssrsConnectionTimeout = $false
@@ -190,29 +190,25 @@ function Get-SSRSConiguration {
                 $showssrsTempDBldfSize = $true
             }
         }
-        # Import-Module SQLPS
-        
     }
     Process {   
         
         $servername = $env:COMPUTERNAME
         $instanceName = "localhost"
         $erroFile = "./error_log/ssrsconfig_" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".txt"
-        $server = New-Object -TypeName Microsoft.SqlServer.Management.Smo.Server -ArgumentList $instanceName
-        $serverVersion = $server.Information.VersionString
-        #$output = $server
-
         try {
             $server = New-Object -TypeName Microsoft.SqlServer.Management.Smo.Server -ArgumentList $instanceName
             $serverVersion = $server.Information.VersionString
             $folder = $server.Information.MasterDBLogPath
            
-            $ssrsConnectionTimeout = $server.ConnectionContext.ConnectTimeout 
+            $ssrsConnectionTimeout = (Invoke-Sqlcmd -Query "SELECT Value FROM [ReportServer].[dbo].ConfigurationInfo where Name = 'SessionTimeout'" -User $user -Password $pass) | Select-Object -ExpandProperty Value
             if ($showssrsConnectionTimeout) {
                 $output += "`n ssrsConnectionTimeout: $ssrsConnectionTimeout"
             }
-            $rs = (Get-WmiObject -namespace root\Microsoft\SqlServer\ReportServer  -class __Namespace).Name
-            $nspace = "root\Microsoft\SQLServer\ReportServer\$rs\v$v\Admin"
+
+            $serverVersion = (Invoke-Sqlcmd -Query "select version_major from msdb.dbo.msdb_version" -User $user -Password $pass) | Select-Object -ExpandProperty version_major
+            $rs = (Get-WmiObject -namespace root\Microsoft\SqlServer\ReportServer  -class __Namespace) | Select-Object -ExpandProperty Name
+            $nspace = "root\Microsoft\SQLServer\ReportServer\$rs\v$serverVersion\Admin"
             $RSServers = Get-WmiObject -Namespace $nspace -class MSReportServer_ConfigurationSetting -ComputerName $servername -ErrorVariable perror -ErrorAction SilentlyContinue
             #$WebPortalUrl
             foreach ($r in $RSServers) {
@@ -238,7 +234,30 @@ function Get-SSRSConiguration {
                 }
                 $ReportServerUri = $WebPortalUrl + "/ReportService2010.asmx"
                 $InheritParent = $true
-         
+                #New Code - starts
+                # $ReportServerUri
+                # $rsProxy = New-WebServiceProxy -Uri $ReportServerUri -UseDefaultCredential
+                # #List out all subfolders under the parent directory
+                # $items = $rsProxy.ListChildren("/", $true)
+                        
+                # #Iterate through every folder 		 
+                # $contentManagers = ""
+                # "333"
+                # $items
+                # "444"
+                # foreach($item in $items)
+                # {
+                #     $item
+                #     $Policies = $rsProxy.GetPolicies($Item.Path, [ref]$InheritParent)
+                #     foreach ($Policy in $Policies) {
+                #         $Policy
+                #         if ($Policy.Roles.Name -eq "Content Manager") {
+                #             $contentManagers += $Policy.GroupUserName + ","
+                #         }
+                #     }
+                # }
+                #New code - ends
+
                 $rsProxy = New-WebServiceProxy -Uri $ReportServerUri -UseDefaultCredential
                 $items = $rsProxy.GetPolicies($folderName, [ref]$InheritParent)
                 $contentManagers = ""

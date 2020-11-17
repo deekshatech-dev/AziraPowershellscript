@@ -11,6 +11,7 @@
     Version: 0.1 
     DateCreated: 14th Oct 2020
 #>
+"Get SSAS Configuration Details: Windows Server, Windows Version, SSAS Connection Timeout, SSAS Version, SSAS Server Mode, SSAS Edition and other SSAS details."
 
 function Get-SSASConfiguration {
     

@@ -11,6 +11,7 @@
     Version: 0.1 
     DateCreated: 14th Oct 2020
 #>
+"Get Diagnostic Details about SQL Server: Server Name, Database Name, TempDB, MasterDB, MSDB, ModelDB file and backup details. "
 
 function Get-ServerDiagnostics {
     
@@ -168,9 +169,11 @@ function Get-ServerDiagnostics {
         # Import-Module SQLPS
         $erroFile = "./error_log/sqlserverdiagnostics_" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".txt"
         $server_name = $env:COMPUTERNAME
+        $ourObject = New-Object -TypeName psobject 
         try {
             if ($showServerName) {
                 $output += "`n server_name: $server_name"
+                $ourObject | Add-Member -MemberType NoteProperty -Name server_name -Value $server_name
             }
            # $dbName = $database
             # if ($showDbName) {
@@ -212,18 +215,23 @@ function Get-ServerDiagnostics {
 
             if ($showtempDbExist) {
                 $output += "`n tempDbExist: $tempDbExist"
+                $ourObject | Add-Member -MemberType NoteProperty -Name tempDbExist -Value $tempDbExist
             }
             if ($showmodelDbExist) {
                 $output += "`n modelDbExist: $modelDbExist"
+                $ourObject | Add-Member -MemberType NoteProperty -Name modelDbExist -Value $modelDbExist
             }
             if ($showmasterDbExist) {
                 $output += "`n masterDbExist: $masterDbExist"
+                $ourObject | Add-Member -MemberType NoteProperty -Name masterDbExist -Value $masterDbExist
             }
             if ($showMSDbExist) {
                 $output += "`n MSDbExist: $MSDbExist"
+                $ourObject | Add-Member -MemberType NoteProperty -Name MSDbExist -Value MSDbExist
             }
             if ($showtempDbMoreThanOneFile) {
                 $output += "`n tempdbMoreThanOneFile: $tempdbMoreThanOneFile"
+                $ourObject | Add-Member -MemberType NoteProperty -Name tempdbMoreThanOneFile -Value $tempdbMoreThanOneFile
             }
         
             $backupFolder = $server.Settings.BackupDirectory        
@@ -247,14 +255,19 @@ function Get-ServerDiagnostics {
                 # "3"
                 # $server.Databases
                 # "4"
+                $index = 0
                 foreach ($db in $databases) {
                     if ($showDbName) {
                         $output += "`n Database: " + $db.Name
+                        $index = $index + 1
+                        $propName = "Database " + $index + ": "
+                        $ourObject | Add-Member -MemberType NoteProperty -Name $propName -Value $db.Name
                     }
                     if ($file.Name -Contains $db.Name) {
                         $dbback = $file.LastWriteTime
                         if ($showdbback) {
                             $output += "`n " + $db.Name + " Database backup performed : $dbback"
+                            $ourObject | Add-Member -MemberType NoteProperty -Name $db.Name + " Database backup performed :" -Value $dbback
                         }
                     }
                 }
@@ -281,6 +294,7 @@ function Get-ServerDiagnostics {
             }
             if ($showDbIntegrityCheck) {
                 $output += "`n DbIntegrityCheck: $DbIntegrityCheck"
+                $ourObject | Add-Member -MemberType NoteProperty -Name DbIntegrityCheck -Value $DbIntegrityCheck
             }
         }
         catch {
@@ -296,7 +310,8 @@ function Get-ServerDiagnostics {
         $filePath = $outputFolder + "/" + $outputFile
         $output | Out-File -Append $filePath -Encoding UTF8
         Write-Host "Check the output at File "  $filePath -ForegroundColor Yellow
-        return $output | Format-List
+        return $ourObject
+        # return $output | Format-List
     }
 }
 

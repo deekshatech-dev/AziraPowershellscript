@@ -169,9 +169,6 @@ function Get-IIsConfiguration {
             Set-Content -Path $erroFile -Value $ErrorBlock
             "Some error occured check " + $erroFile + " for stacktrace"
         }
-
-        
-
     }
     End {
         return $output | Format-List
