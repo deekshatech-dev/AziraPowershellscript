@@ -28,42 +28,46 @@ function Get-SSRSConiguration {
     
     Param
     (
+        [string]$user = $args[0],
+        [string]$pass = $args[1],
         [Parameter(Mandatory = $false)]
-        $showssrsConnectionTimeout = $args[0],
+        $showssrsConnectionTimeout = $args[2],
         [Parameter(Mandatory = $false)]
-        $showssrsInstanceName = $args[1],
+        $showssrsInstanceName = $args[3],
         [Parameter(Mandatory = $false)]
-        $showssrsVsSqlVersion = $args[2],
+        $showssrsVsSqlVersion = $args[4],
         [Parameter(Mandatory = $false)]
-        $showWebPortalUrl = $args[3],
+        $showWebPortalUrl = $args[5],
         [Parameter(Mandatory = $false)]
-        $showcontentManagers = $args[4],
+        $showcontentManagers = $args[6],
         [Parameter(Mandatory = $false)]
-        $showreportManagerUrl = $args[5],
+        $showreportManagerUrl = $args[7],
         [Parameter(Mandatory = $false)]
-        $showSecureConnectionLevel = $args[6],
+        $showSecureConnectionLevel = $args[8],
         [Parameter(Mandatory = $false)]
-        $showSenderEmailAddress  = $args[7],
+        $showSenderEmailAddress  = $args[9],
         [Parameter(Mandatory = $false)]
-        $showexecAccount = $args[8],
+        $showexecAccount = $args[10],
         [Parameter(Mandatory = $false)]
-        $showssrsDBmdfPath = $args[9],
+        $showssrsDBmdfPath = $args[11],
         [Parameter(Mandatory = $false)]
-        $showssrsDBmdfSize = $args[10],
+        $showssrsDBmdfSize = $args[12],
         [Parameter(Mandatory = $false)]
-        $showssrsDBldfSize = $args[11],
+        $showssrsDBldfSize = $args[13],
         [Parameter(Mandatory = $false)]
-        $showssrsTempDBmdfSize = $args[12],
+        $showssrsTempDBmdfSize = $args[14],
         [Parameter(Mandatory = $false)]
-        $showssrsTempDBldfPath = $args[13],
+        $showssrsTempDBldfPath = $args[16],
         [Parameter(Mandatory = $false)]
-        $showssrsTempDBldfSize = $args[14]
+        $showssrsTempDBldfSize = $args[18]
     )
 
     Begin {
         $output = ""
         $outputFolder = "./Output/SSRSConfiguration"
-        $outputFile = "./SSRSConfiguration_" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".csv"
+        $outputFile = "/SSRSConfiguration_" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".csv"
+        $password = ConvertTo-SecureString $pass -AsPlainText -Force
+        $pccred = New-Object System.Management.Automation.PSCredential ($user, $password )
         If (!(Test-Path $outputFolder)) {
             New-Item -Path $outputFolder -ItemType Directory
         }
@@ -201,12 +205,13 @@ function Get-SSRSConiguration {
             $serverVersion = $server.Information.VersionString
             $folder = $server.Information.MasterDBLogPath
            
-            $ssrsConnectionTimeout = (Invoke-Sqlcmd -Query "SELECT Value FROM [ReportServer].[dbo].ConfigurationInfo where Name = 'SessionTimeout'" -User $user -Password $pass) | Select-Object -ExpandProperty Value
+           # $ssrsConnectionTimeout = (Invoke-Sqlcmd -Query "SELECT Value FROM [ReportServer].[dbo].ConfigurationInfo where Name = 'SessionTimeout'" -User $user -Password $pass) | Select-Object -ExpandProperty Value
+            $ssrsConnectionTimeout = (Invoke-Sqlcmd -Query "SELECT Value FROM [ReportServer].[dbo].ConfigurationInfo where Name = 'SessionTimeout'" -Credential $pccred) | Select-Object -ExpandProperty Value
             if ($showssrsConnectionTimeout) {
                 $output += "`n ssrsConnectionTimeout: $ssrsConnectionTimeout"
             }
 
-            $serverVersion = (Invoke-Sqlcmd -Query "select version_major from msdb.dbo.msdb_version" -User $user -Password $pass) | Select-Object -ExpandProperty version_major
+            $serverVersion = (Invoke-Sqlcmd -Query "select version_major from msdb.dbo.msdb_version" -Credential $pccred) | Select-Object -ExpandProperty version_major
             $rs = (Get-WmiObject -namespace root\Microsoft\SqlServer\ReportServer  -class __Namespace) | Select-Object -ExpandProperty Name
             $nspace = "root\Microsoft\SQLServer\ReportServer\$rs\v$serverVersion\Admin"
             $RSServers = Get-WmiObject -Namespace $nspace -class MSReportServer_ConfigurationSetting -ComputerName $servername -ErrorVariable perror -ErrorAction SilentlyContinue

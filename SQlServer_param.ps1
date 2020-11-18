@@ -23,87 +23,91 @@ function Get-MachineDetails {
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         #$RemoteComputerName
         [string]$database = $args[0],
+        [string]$user = $args[1],
+        [string]$pass = $args[2],
         [Parameter(Mandatory = $false)]
-        $showWindowsVersion = $args[1],
+        $showWindowsVersion = $args[3],
         [Parameter(Mandatory = $false)]
-        $showSqlProductDetails = $args[2],
+        $showSqlProductDetails = $args[4],
         [Parameter(Mandatory = $false)]
-        $showCDriveSpace = $args[3],
+        $showCDriveSpace = $args[5],
         [Parameter(Mandatory = $false)]
-        $showSqlMemoryDetails = $args[4],
+        $showSqlMemoryDetails = $args[6],
         [Parameter(Mandatory = $false)]
-        $showDriveSpaceDetails = $args[5],
+        $showDriveSpaceDetails = $args[7],
         [Parameter(Mandatory = $false)]
-        $showBackupPath = $args[6],
+        $showBackupPath = $args[8],
         [Parameter(Mandatory = $false)]
-        $showLDFSize = $args[7],
+        $showLDFSize = $args[9],
         [Parameter(Mandatory = $false)]
-        $showServerVersion = $args[8],
+        $showServerVersion = $args[10],
         [Parameter(Mandatory = $false)]
-        $showProductLevel = $args[9],
+        $showProductLevel = $args[11],
         [Parameter(Mandatory = $false)]
-        $showFullTextSearchEnabled = $args[10],
+        $showFullTextSearchEnabled = $args[12],
         [Parameter(Mandatory = $false)]
-        $showSqlLanguage = $args[11],
+        $showSqlLanguage = $args[13],
         [Parameter(Mandatory = $false)]
-        $showSqlEdition = $args[12],
+        $showSqlEdition = $args[14],
         [Parameter(Mandatory = $false)]
-        $showdbCollationName = $args[13],
+        $showdbCollationName = $args[15],
         [Parameter(Mandatory = $false)]
-        $showCLRVersion = $args[14],
+        $showCLRVersion = $args[16],
         [Parameter(Mandatory = $false)]
-        $showSqlPort = $args[15],
+        $showSqlPort = $args[17],
         [Parameter(Mandatory = $false)]
-        $showServerName = $args[16],
+        $showServerName = $args[18],
         [Parameter(Mandatory = $false)]
-        $showRecomendedCpu = $args[17],
+        $showRecomendedCpu = $args[19],
         [Parameter(Mandatory = $false)]
-        $showNumberFormat = $args[18],
+        $showNumberFormat = $args[20],
         [Parameter(Mandatory = $false)]
-        $showSqlLicense = $args[19],
+        $showSqlLicense = $args[21],
         [Parameter(Mandatory = $false)]
-        $showMaxDop = $args[20],
+        $showMaxDop = $args[22],
         [Parameter(Mandatory = $false)]
-        $showNumaNodes = $args[21],
+        $showNumaNodes = $args[23],
         [Parameter(Mandatory = $false)]
-        $showCostOfThreshold = $args[22],
+        $showCostOfThreshold = $args[24],
         [Parameter(Mandatory = $false)]
-        $showServerType = $args[23],
+        $showServerType = $args[25],
         [Parameter(Mandatory = $false)]
-        $showDbName = $args[24],
+        $showDbName = $args[26],
         [Parameter(Mandatory = $false)]
-        $showDbMailEnabled = $args[25],
+        $showDbMailEnabled = $args[27],
         [Parameter(Mandatory = $false)]
-        $showDbMailStatus = $args[26],
+        $showDbMailStatus = $args[28],
         [Parameter(Mandatory = $false)]
-        $showFileStramConfigLevel = $args[27],
+        $showFileStramConfigLevel = $args[29],
         [Parameter(Mandatory = $false)]
-        $showFilestreamAccessLevel = $args[28],
+        $showFilestreamAccessLevel = $args[30],
         [Parameter(Mandatory = $false)]
-        $showFilestreamSize = $args[29],
+        $showFilestreamSize = $args[31],
         [Parameter(Mandatory = $false)]
-        $showClrEnabled = $args[30],
+        $showClrEnabled = $args[32],
         [Parameter(Mandatory = $false)]
-        $showDbRecoveryModel = $args[31],
+        $showDbRecoveryModel = $args[33],
         [Parameter(Mandatory = $false)]
-        $showDbCompatibilityLevel = $args[32],
+        $showDbCompatibilityLevel = $args[34],
         [Parameter(Mandatory = $false)]
-        $showDbLastBackupDate = $args[33],
+        $showDbLastBackupDate = $args[35],
         [Parameter(Mandatory = $false)]
-        $showTempLDFPath = $args[34],
+        $showTempLDFPath = $args[36],
         [Parameter(Mandatory = $false)]
-        $showTempMDFPath = $args[35],
+        $showTempMDFPath = $args[37],
         [Parameter(Mandatory = $false)]
-        $showMDFPath = $args[36],
+        $showMDFPath = $args[38],
         [Parameter(Mandatory = $false)]
-        $showMDFSize = $args[37]
+        $showMDFSize = $args[39]
     )
 
     Begin {
         $output = ""
         $totalspace = 0
         $outputFolder = "./Output/SqlServer"
-        $outputFile = "./SqlServer_" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".csv"
+        $outputFile = "/SqlServer_" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".csv"
+        $password = ConvertTo-SecureString $pass -AsPlainText -Force
+        $pccred = New-Object System.Management.Automation.PSCredential ($user, $password )
         If (!(Test-Path $outputFolder)) {
             New-Item -Path $outputFolder -ItemType Directory
         }
@@ -428,6 +432,7 @@ function Get-MachineDetails {
         # Import-Module SqlServer
         $erroFile = "./error_log/sqlserver_" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".txt"
         $server_name = $env:COMPUTERNAME
+        $ourObject = New-Object -TypeName psobject 
         try {
             
             $output += "`n================================================"
@@ -436,18 +441,23 @@ function Get-MachineDetails {
             if ($showWindowsVersion) {
                 $WindowsVersion = (systeminfo | Select-String 'OS Version:')[0].ToString().Split(':')[1].Trim()
                 $output += "`n Windows Version:" + $WindowsVersion
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Windows Version" -Value $WindowsVersion
             }
             if ($showSqlMemoryDetails) {
-                $UsedMemorybySql = Invoke-SqlCmd -Query "SELECT physical_memory_in_use_kb/1024 AS sqlusedmemory FROM sys.dm_os_process_memory;"  
+                $UsedMemorybySql = Invoke-SqlCmd -Query "SELECT physical_memory_in_use_kb/1024 AS sqlusedmemory FROM sys.dm_os_process_memory;" -Credential $pccred
                 $output += "`n Total Memory In Use: " + $UsedMemorybySql.sqlusedmemory + "MB"
-                $availableMemorybySql = Invoke-SqlCmd -Query "SELECT available_commit_limit_kb/1024 AS sqlavailmemory FROM sys.dm_os_process_memory;"
+                $availableMemorybySql = Invoke-SqlCmd -Query "SELECT available_commit_limit_kb/1024 AS sqlavailmemory FROM sys.dm_os_process_memory;" -Credential $pccred
                 $totalMemoryforSQL = $availableMemorybySql.sqlavailmemory + $UsedMemorybySql.sqlusedmemory
                 $output += "`n Total Memory Allocated: " + $totalMemoryforSQL + "MB"
+                $memoryValue = $totalMemoryforSQL + "MB"
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Total Memory Allocated" -Value $memoryValue
             }
             if ($showCDriveSpace) {
                 $used = (Get-PSDrive C | Select-Object Used).Used / 1MB
                 $free = (Get-PSDrive C | Select-Object Free).Free / 1MB
                 $output += "`n Hard Drive C Drive: [" + $used + "/" + $free + "]"
+                $hardDriveValue = "Hard Drive C Drive: [" + $used + "/" + $free + "]"
+                $ourObject | Add-Member -MemberType NoteProperty -Name "C Drive Details" -Value $hardDriveValue
             }
             if ($showDriveSpaceDetails) {
                 $allDriveSpace = Get-WmiObject -Class win32_logicaldisk -ComputerName $server_name
@@ -463,6 +473,8 @@ function Get-MachineDetails {
                 $totalSpace = $totalSpace / 1MB
                 $output += "`n Available Physical Memory: $totalAvailableSpace"
                 $output += "`n Total Physical Memory: $totalSpace"
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Available Physical Memory" -Value $totalAvailableSpace
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Total Physical Memory" -Value $totalSpace
             }
             $output += "`n================================================"
             $output += "`n Sql Server  Details"
@@ -484,13 +496,17 @@ function Get-MachineDetails {
             
             if ($showServerName) {
                 $output += "`n Server Name : " + $ServerName
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Server Name" -Value $totalSpace
             }
             if ($showRecomendedCpu) {
                 $output += "`n Recommended [SQL Server] : CPUCore=" + $CPUCore + ",RAM=" + $RAMGB + " GB,DISK=" + $totalspace + " GB"
+                $recomValue = "CPUCore=" + $CPUCore + ",RAM=" + $RAMGB + " GB,DISK=" + $totalspace + " GB"
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Recommended [SQL Server]" -Value $recomValue
             }
             if ($showSqlProductDetails) {
-                $SqlProductDetails = (Invoke-SqlCmd -query "select @@version" -ServerInstance "localhost").Column1
+                $SqlProductDetails = (Invoke-SqlCmd -query "select @@version" -ServerInstance "localhost" -Credential $pccred).Column1
                 $output += "`n SqlProductDetails: $SqlProductDetails"
+                $ourObject | Add-Member -MemberType NoteProperty -Name "SqlProductDetails" -Value $SqlProductDetails
             }
 
             $instanceName = "localhost"
@@ -512,33 +528,40 @@ function Get-MachineDetails {
             if ($showServerVersion) {
                 $serverVersion = $server.Information.VersionString
                 $output += "`n serverVersion: $serverVersion"
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Server Version" -Value $serverVersion
             }
             if ($showProductLevel) {
                 $productLevel = $server.Information.ProductLevel
                 $output += "`n productLevel: $productLevel"
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Product Level" -Value $productLevel
             }
             if ($showFullTextSearchEnabled) {
                 $FullTextSearchEnabled = $server.Information.IsFullTextInstalled
                 $output += "`n FullTextSearchEnabled: $FullTextSearchEnabled"
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Full TextSearch is enabled?" -Value $FullTextSearchEnabled
             }
             if ($showSqlLanguage) {
                 $SqlLanguage = $server.Information.Language
                 $output += "`n SqlLanguage: $SqlLanguage"
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Sql Language" -Value $SqlLanguage
             }
             if ($showSqlEdition) {
                 $SqlEdition = $server.Information.Edition
                 $output += "`n SqlEdition: $SqlEdition"
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Sql Edition" -Value $SqlEdition
             }
             if ($showdbCollationName) {
                 $dbCollationName = $server.Information.Collation
                 $output += "`n dbCollationName: $dbCollationName"
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Collation Name" -Value $dbCollationName
             }
             if ($showCLRVersion) {
                 $CLR = "v" + $PSVersionTable.CLRVersion.Major.ToString() + "." + $PSVersionTable.CLRVersion.Minor.ToString() + "." + $PSVersionTable.CLRVersion.Build.ToString()
                 $output += "`n CLR Version $CLR"
+                $ourObject | Add-Member -MemberType NoteProperty -Name "CLR Version" -Value $CLR
             }
             if ($showSqlPort) {
-                $sql_services = Get-WmiObject -Query "select * from win32_service where PathName like '%%sqlservr.exe%%'" -ComputerName "$server_name" -ErrorAction Stop
+                $sql_services = Get-WmiObject -Query "select * from win32_service where PathName like '%%sqlservr.exe%%'" -ComputerName "$server_name" -ErrorAction Stop -Credential $pccred
                 $processID = $sql_services.ProcessID[0]
     
                 if ($processID -ne "") {
@@ -555,61 +578,72 @@ function Get-MachineDetails {
             
             
             if ($showNumberFormat) {
-                $numberFormat = (Invoke-Sqlcmd -Query "select format(987654321.00, 'N', 'en-us' );").Column1
+                $numberFormat = (Invoke-Sqlcmd -Query "select format(987654321.00, 'N', 'en-us' );" -Credential $pccred).Column1
                 $output += "`n Number Format(en-us): $numberFormat"
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Number Format(en-us)" -Value $numberFormat
             }
             if ($showSqlLicense) {
-                $sysInfo = Invoke-Sqlcmd -Query "SELECT * FROM sys.dm_os_sys_info"
+                $sysInfo = Invoke-Sqlcmd -Query "SELECT * FROM sys.dm_os_sys_info" -Credential $pccred
 
                 $sockets = $sysInfo.socket_count
                 $coresPerSocket = $sysInfo.cores_per_socket
                 $logicalProcessors = (Get-CimInstance Win32_ComputerSystem) | Select  NumberOfLogicalProcessors
                 $sqlLicense = "SQL Server detected " + $sockets + " sockets with " + $coresPerSocket.NumberOfLogicalProcessors + " cores per socket and " + $logicalProcessors.NumberOfLogicalProcessors + " logical processors per socket, " + $logicalProcessors.NumberOfLogicalProcessors + " total logical processors; using 4 logical processors based on SQL Server licensing."
                 $output += "`n SQL License: $sqlLicense"
+                $ourObject | Add-Member -MemberType NoteProperty -Name "SQL License" -Value $sqlLicense
             }
             if ($showMaxDop) {
                 $sqlHardwareDetails = (Test-DbaMaxDop -SqlInstance $env:COMPUTERNAME | Select-Object *)[0]
                 $dbMaxDOP = $sqlHardwareDetails.DatabaseMaxDop
                 $output += "`n Max DOP: $dbMaxDOP"
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Max DOP" -Value $dbMaxDOP
             }
             if ($showNumaNodes) {
                 $NumaNodes = $sqlHardwareDetails.NumaNodes
                 $output += "`n NUMA Nodes: $NumaNodes"
+                $ourObject | Add-Member -MemberType NoteProperty -Name "NUMA Nodes" -Value $NumaNodes
             }
             if ($showCostOfThreshold) {
-                $costThresholdDOP = Invoke-Sqlcmd -Query "SELECT value FROM sys.configurations WITH (NOLOCK) WHERE name IN ('cost threshold for parallelism')"
+                $costThresholdDOP = Invoke-Sqlcmd -Query "SELECT value FROM sys.configurations WITH (NOLOCK) WHERE name IN ('cost threshold for parallelism')" -Credential $pccred
                 $output += "`n Cost of Threshold DOP: $costThresholdDOP"
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Cost of Threshold DOP" -Value $costThresholdDOP
             }
             if ($showServerType) {
                 $ServerType = (Get-WmiObject -ComputerName $ServerName -class Win32_ComputerSystem | Select -Property Model).Model
                 $output += "`n Server TYPE: $ServerType"
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Server TYPE" -Value $ServerType
             }
             if ($showDbName) {
                 $output += "`n dbName: $database"
+                $ourObject | Add-Member -MemberType NoteProperty -Name "DataBase Name" -Value $database
             }
             $server = New-Object ('Microsoft.SqlServer.Management.Smo.Server') "LOCALHOST"
             if ($databaseExist) {
                 if ($showDbMailEnabled) {
                     $isDatabaseMailEnabled = $server.Configuration.DatabaseMailEnabled.ConfigValue
                     $output += "`n isDatabaseMailEnabled: $isDatabaseMailEnabled"
+                    $ourObject | Add-Member -MemberType NoteProperty -Name "Is Database Mail Enabled?" -Value $isDatabaseMailEnabled
                 }
                 if ($showDbMailStatus) {
                     $databaseMailStatus = $server.Configuration.DatabaseMailEnabled.RunValue
                     $output += "`n databaseMailStatus: $databaseMailStatus"
+                    $ourObject | Add-Member -MemberType NoteProperty -Name "Database Mail Status?" -Value $databaseMailStatus
                 }
                 if ($showFileStramConfigLevel) {
                     $FileStreamConfigLevel = $server.Configuration.FilestreamAccessLevel.ConfigValue
                     $output += "`n FileStreamConfigLevel: $FileStreamConfigLevel"
+                    $ourObject | Add-Member -MemberType NoteProperty -Name "Filestream config Level?" -Value $FileStreamConfigLevel
                 }
                 if ($showFilestreamAccessLevel) {
                     $FileStreamAccessLevel = $server.Configuration.FilestreamAccessLevel.RunValue
                     $output += "`n FileStreamAccessLevel: $FileStreamAccessLevel"
+                    $ourObject | Add-Member -MemberType NoteProperty -Name "Filestream access Level?" -Value $FileStreamAccessLevel
                 }
                 if ($showFilestreamSize) {
                     $FileStreamFileSize = 0;
                     $FileStreamFilePath = "Filestream Not enabled in DB.";
                     if ($FileStreamConfigLevel -ne 0) {
-                        $dbfiles = Invoke-Sqlcmd -Query "Use $database Select * from sys.database_files;"
+                        $dbfiles = Invoke-Sqlcmd -Query "Use $database Select * from sys.database_files;" -Credential $pccred
         
                         foreach ($file in $dbfiles) {
                             if ($file.type_desc -eq "FILESTREAM") {
@@ -619,24 +653,28 @@ function Get-MachineDetails {
                         }
                     }
 
+                    # Change the backup path using sql query
                     if ($showBackupPath) {
                         $backupPath = ($server.Settings.BackupDirectory).ToString() + $database + ".bak"
                         $output += "`n backupPath: $backupPath"    
+                        $ourObject | Add-Member -MemberType NoteProperty -Name "BackUp Path" -Value $backupPath
                     }
                
                 
                     $output += "`n FILESTREAM FILE Path: $FileStreamFilePath"
                     $output += "`n FILESTREAM FILE Size: $FileStreamFileSize"
+                    $ourObject | Add-Member -MemberType NoteProperty -Name "FILESTREAM FILE Path" -Value $FileStreamFilePath
+                    $ourObject | Add-Member -MemberType NoteProperty -Name "FILESTREAM FILE Size" -Value $FileStreamFileSize
                 }
-
             }
             else {
                 "Database Not Found!"
             }
 
             if ($showClrEnabled) {
-                $isClrEnabled = ( Invoke-Sqlcmd -query "SELECT * FROM sys.configurations WHERE name = 'clr enabled'" ).value  
+                $isClrEnabled = ( Invoke-Sqlcmd -query "SELECT * FROM sys.configurations WHERE name = 'clr enabled'" -Credential $pccred).value  
                 $output += "`n isClrEnabled: $isClrEnabled"
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Is Clear Enabled" -Value $isClrEnabled
             }
 
             foreach ($db in $server.Databases) {
@@ -644,18 +682,22 @@ function Get-MachineDetails {
                     if ($showDbRecoveryModel) {
                         $dbRecoveryModel = $db.RecoveryModel
                         $output += "`n dbRecoveryModel: $dbRecoveryModel"
+                        $ourObject | Add-Member -MemberType NoteProperty -Name "DB Recovery Model" -Value $dbRecoveryModel
                     }
                     if ($showDbCompatibilityLevel) {
                         $dbCompatibilityLevel = $db.CompatibilityLevel
                         $output += "`n dbCompatibilityLevel: $dbCompatibilityLevel"
+                        $ourObject | Add-Member -MemberType NoteProperty -Name "DB Compatibility Level" -Value $dbCompatibilityLevel
                     }
                     if ($showDbLastBackupDate) {
                         $dbLastBackupDate = $db.LastBackupDate.ToString("MM/dd/yyyy")
                         if ($dbLastBackupDate -eq "01/01/0001") {
                             $output += "`n dbLastBackupDate: N/A"
+                            $ourObject | Add-Member -MemberType NoteProperty -Name "DB Last backup date" -Value "N/A"
                         }
                         else {
                             $output += "`n dbLastBackupDate: $dbLastBackupDate"
+                            $ourObject | Add-Member -MemberType NoteProperty -Name "DB Last backup date" -Value $dbLastBackupDate
                         }
                     }
                 }
@@ -669,12 +711,14 @@ function Get-MachineDetails {
                     if ($showTempLDFPath) {
                         $tempDbLdfPath = $folder + "\" + $file.Name
                         $output += "`n tempDbLdfPath:$tempDbLdfPath"
+                        $ourObject | Add-Member -MemberType NoteProperty -Name "Temp Db Ldf Path" -Value $tempDbLdfPath
                     }
                 }
                 if ($file.Name -eq "templog.mdf") {
                     if ($showTempMDFPath) {
                         $tempDbmdfPath = $folder + "\" + $file.Name
                         $output += "`n tempDbmdfPath: $tempDbmdfPath"
+                        $ourObject | Add-Member -MemberType NoteProperty -Name "Temp Db Mdf Path" -Value $tempDbmdfPath
                     }
                 }
                 else {
@@ -682,20 +726,24 @@ function Get-MachineDetails {
                         if ($showMDFPath) {
                             $mdfpath = $folder + "\" + $file.Name
                             $output += "`n MDFPath: $mdfpath"
+                            $ourObject | Add-Member -MemberType NoteProperty -Name "Mdf Path" -Value $tempDbmdfPath
                         }
                         if ($showMDFSize) {
                             $mdfsize = ( $file.Length / 1000000 ).ToString() + " MB"
                             $output += "`n MDFSize: $mdfsize"
+                            $ourObject | Add-Member -MemberType NoteProperty -Name "DB Last backup date" -Value $dbLastBackupDate
                         }
                     }
                     elseif ($file.Name -match ".ldf") {
                         if ($showLDFPath) {
                             $ldfpath = $folder + "\" + $file.Name
                             $output += "`n LDFPath: $ldfpath"
+                            $ourObject | Add-Member -MemberType NoteProperty -Name "LDF Path" -Value $dbLastBackupDate
                         }
                         if ($showLDFSize) {
                             $ldfsize = ( $file.Length / 1000000 ).ToString() + " MB"
                             $output += "`n LDFSize: $ldfsize"
+                            $ourObject | Add-Member -MemberType NoteProperty -Name "LDF Size" -Value $ldfsize
                         }
                     }
                 }
@@ -713,7 +761,8 @@ function Get-MachineDetails {
         $filePath = $outputFolder + "/" + $outputFile
         $output | Out-File -Append $filePath -Encoding UTF8
         Write-Host "Check the output at File "  $filePath -ForegroundColor Yellow
-        return $output | Format-List
+        return $ourObject
+        # return $output | Format-List
     }
 }
 Get-MachineDetails

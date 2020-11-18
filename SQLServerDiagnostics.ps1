@@ -122,9 +122,9 @@ function Get-ServerDiagnostics {
                 }
             }
 
-            $output += "`n modelback: $modelback"
-            $output += "`n masterback: $masterback"
-            $output += "`n msdbback: $msdbback"
+            $output += "`n Model Database Backup Performed: $modelback"
+            $output += "`n MASTER Database Backup Performed: $masterback"
+            $output += "`n Msdb Database Backup Performed: $msdbback"
             $output += "`n dbback: $dbback"
 
 

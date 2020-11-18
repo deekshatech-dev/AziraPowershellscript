@@ -58,7 +58,7 @@ function Get-IIsConfiguration {
         $output = ""
         $totalspace = 0
         $outputFolder = "./Output/IISConfiguration"
-        $outputFile = "./IISConfiguration_" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".csv"
+        $outputFile = "/IISConfiguration_" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".csv"
         If (!(Test-Path $outputFolder)) {
             New-Item -Path $outputFolder -ItemType Directory
         }

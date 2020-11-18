@@ -21,58 +21,61 @@ function Get-MachineDetails {
         [ValidateNotNullOrEmpty()]
         [string]$HostName = $args[0],
         [string]$port = $args[1],
+        [string]$user = $args[2],
+        [string]$pass = $args[3],
         [Parameter(Mandatory = $false)]
-        $showtotalCpuCount = $args[2],
+        $showtotalCpuCount = $args[4],
         [Parameter(Mandatory = $false)]
-        $showUpdateDateObject = $args[3],
+        $showUpdateDateObject = $args[5],
         [Parameter(Mandatory = $false)]
-        $showRecommendedCPU = $args[4],
+        $showRecommendedCPU = $args[6],
         [Parameter(Mandatory = $false)]
-        $showAZISService = $args[5],
+        $showAZISService = $args[7],
         [Parameter(Mandatory = $false)]
-        $showAZTaskService = $args[6],
+        $showAZTaskService = $args[8],
         [Parameter(Mandatory = $false)]
-        $showServerName = $args[7],
+        $showServerName = $args[9],
         [Parameter(Mandatory = $false)]
-        $showRam = $args[8],
+        $showRam = $args[10],
         [Parameter(Mandatory = $false)]
-        $showWindowsVersion = $args[9],
+        $showWindowsVersion = $args[11],
         [Parameter(Mandatory = $false)]
-        $showis64BitOS = $args[10],
+        $showis64BitOS = $args[12],
         [Parameter(Mandatory = $false)]
-        $showis64BitProcess = $args[11],
+        $showis64BitProcess = $args[13],
         [Parameter(Mandatory = $false)]
-        $showdomain = $args[12],
+        $showdomain = $args[14],
         [Parameter(Mandatory = $false)]
-        $showconnectionTimeout = $args[13],
+        $showconnectionTimeout = $args[15],
         [Parameter(Mandatory = $false)]
-        $showssl2 = $args[14],
+        $showssl2 = $args[16],
         [Parameter(Mandatory = $false)]
-        $showssl3 = $args[15],
+        $showssl3 = $args[17],
         [Parameter(Mandatory = $false)]
-        $showtls = $args[16],
+        $showtls = $args[18],
         [Parameter(Mandatory = $false)]
-        $showtls11 = $args[17],
+        $showtls11 = $args[19],
         [Parameter(Mandatory = $false)]
-        $showtls12 = $args[18],
+        $showtls12 = $args[20],
         [Parameter(Mandatory = $false)]
-        $showssslv2 = $args[19],
+        $showssslv2 = $args[21],
         [Parameter(Mandatory = $false)]
-        $showssslv3 = $args[20],
+        $showssslv3 = $args[22],
         [Parameter(Mandatory = $false)]
-        $showtsls11 = $args[21],
+        $showtsls11 = $args[23],
         [Parameter(Mandatory = $false)]
-        $showstlsv12 = $args[22],
+        $showstlsv12 = $args[24],
         [Parameter(Mandatory = $false)]
-        $showstlsv10 = $args[23]
-        
+        $showstlsv10 = $args[25]
     )
 
     Begin {
         $output = ""
         $totalspace = 0
         $outputFolder = "./Output/Application"
-        $outputFile = "./Application_" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".csv"
+        $outputFile = "/Application_" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".csv"
+        $password = ConvertTo-SecureString $pass -AsPlainText -Force
+        $pccred = New-Object System.Management.Automation.PSCredential ($user, $password )
         If (!(Test-Path $outputFolder)) {
             New-Item -Path $outputFolder -ItemType Directory
         }
@@ -269,7 +272,7 @@ function Get-MachineDetails {
              if($UpdateDateObject -eq "01/01/1601"){
                 $UpdateDateObject = "N/A"
             }
-            $totalCpuCount = ( Invoke-Sqlcmd -Query "SELECT i.cpu_count from sys.dm_os_sys_info i").cpu_count
+            $totalCpuCount = ( Invoke-Sqlcmd -Query "SELECT i.cpu_count from sys.dm_os_sys_info i" -Credential $pccred).cpu_count
             $WindowsVersion = (systeminfo | Select-String 'OS Version:')[0].ToString().Split(':')[1].Trim()
             $is64BitOS = [System.Environment]::Is64BitOperatingSystem
             $is64BitProcess = [System.Environment]::Is64BitProcess
@@ -281,7 +284,7 @@ function Get-MachineDetails {
           
             
 
-            $connectionTimeout = ( Invoke-Sqlcmd -Query "sp_configure 'Remote Query Timeout'").config_value
+            $connectionTimeout = ( Invoke-Sqlcmd -Query "sp_configure 'Remote Query Timeout'" -Credential $pccred).config_value
             
             $enabledProtocols = [enum]::GetNames([Net.SecurityProtocolType])
             $ssl2 = "Disabled"

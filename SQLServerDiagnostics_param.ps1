@@ -17,37 +17,41 @@ function Get-ServerDiagnostics {
     
     Param
     (
+        [string]$user = $args[0],
+        [string]$pass = $args[1],
         [Parameter(Mandatory = $false)]
-        $showServerName = $args[0],
+        $showServerName = $args[2],
         [Parameter(Mandatory = $false)]
-        $showDbName = $args[1],
+        $showDbName = $args[3],
         [Parameter(Mandatory = $false)]
-        $showtempDbExist = $args[2],
+        $showtempDbExist = $args[4],
         [Parameter(Mandatory = $false)]
-        $showmodelDbExist = $args[3],
+        $showmodelDbExist = $args[5],
         [Parameter(Mandatory = $false)]
-        $showmasterDbExist = $args[4],
+        $showmasterDbExist = $args[6],
         [Parameter(Mandatory = $false)]
-        $showMSDbExist = $args[5],
+        $showMSDbExist = $args[7],
         [Parameter(Mandatory = $false)]
-        $showtempDbMoreThanOneFile = $args[6],
+        $showtempDbMoreThanOneFile = $args[8],
         [Parameter(Mandatory = $false)]
-        $showmodelback = $args[7],
+        $showmodelback = $args[9],
         [Parameter(Mandatory = $false)]
-        $showmasterback = $args[8],
+        $showmasterback = $args[10],
         [Parameter(Mandatory = $false)]
-        $showmsdbback = $args[9],
+        $showmsdbback = $args[11],
         [Parameter(Mandatory = $false)]
-        $showdbback = $args[10],
+        $showdbback = $args[12],
         [Parameter(Mandatory = $false)]
-        $showDbIntegrityCheck = $args[11]
+        $showDbIntegrityCheck = $args[13]
     )
 
     Begin {
         $output = ""
         $totalspace = 0
         $outputFolder = "./Output/SqlServerDiagnostics"
-        $outputFile = "./Diagnostic_" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".csv"
+        $outputFile = "/Diagnostic_" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".csv"
+        $password = ConvertTo-SecureString $pass -AsPlainText -Force
+        $pccred = New-Object System.Management.Automation.PSCredential ($user, $password )
         If (!(Test-Path $outputFolder)) {
             New-Item -Path $outputFolder -ItemType Directory
         }
@@ -214,24 +218,24 @@ function Get-ServerDiagnostics {
 
 
             if ($showtempDbExist) {
-                $output += "`n tempDbExist: $tempDbExist"
-                $ourObject | Add-Member -MemberType NoteProperty -Name tempDbExist -Value $tempDbExist
+                $output += "`n Is TEMPDB Database Exists?  $tempDbExist"
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Is TEMPDB Database Exists? " -Value $tempDbExist
             }
             if ($showmodelDbExist) {
                 $output += "`n modelDbExist: $modelDbExist"
-                $ourObject | Add-Member -MemberType NoteProperty -Name modelDbExist -Value $modelDbExist
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Is modelDb Database Exists? " -Value $modelDbExist
             }
             if ($showmasterDbExist) {
                 $output += "`n masterDbExist: $masterDbExist"
-                $ourObject | Add-Member -MemberType NoteProperty -Name masterDbExist -Value $masterDbExist
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Is masterDb Database Exists? " -Value $masterDbExist
             }
             if ($showMSDbExist) {
                 $output += "`n MSDbExist: $MSDbExist"
-                $ourObject | Add-Member -MemberType NoteProperty -Name MSDbExist -Value MSDbExist
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Is msdb Database Exists? " -Value $MSDbExist
             }
             if ($showtempDbMoreThanOneFile) {
                 $output += "`n tempdbMoreThanOneFile: $tempdbMoreThanOneFile"
-                $ourObject | Add-Member -MemberType NoteProperty -Name tempdbMoreThanOneFile -Value $tempdbMoreThanOneFile
+                $ourObject | Add-Member -MemberType NoteProperty -Name "TempDB Only Has 1 Data File? " -Value tempdbMoreThanOneFile
             }
         
             $backupFolder = $server.Settings.BackupDirectory        

@@ -45,7 +45,7 @@ function Get-SSASConfiguration {
         $output = ""
         $totalspace = 0
         $outputFolder = "./Output/SSASConfiguration"
-        $outputFile = "./SSASConfiguration_" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".csv"
+        $outputFile = "/SSASConfiguration_" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".csv"
         If (!(Test-Path $outputFolder)) {
             New-Item -Path $outputFolder -ItemType Directory
         }
