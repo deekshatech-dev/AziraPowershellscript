@@ -28,15 +28,17 @@ function Get-SSASConfiguration {
         [Parameter(Mandatory = $false)]
         $showssasVersion = $args[4],
         [Parameter(Mandatory = $false)]
-        $showssasVsSqlVersion = $args[5],
+        $showshowssasVsSqlVersion = $args[5],
         [Parameter(Mandatory = $false)]
-        $showssasServerMode = $args[6],
+        $showssasVsSqlVersion = $args[6],
         [Parameter(Mandatory = $false)]
-        $showssasCollation = $args[7],
+        $showssasServerMode = $args[7],
         [Parameter(Mandatory = $false)]
-        $showssasCubes = $args[8],
+        $showssasCollation = $args[8],
         [Parameter(Mandatory = $false)]
-        $showssasEdition = $args[9]
+        $showssasCubes = $args[9],
+        [Parameter(Mandatory = $false)]
+        $showssasEdition = $args[10]
         # [Parameter(Mandatory=$false)]
         # $show,
     )
@@ -149,13 +151,16 @@ function Get-SSASConfiguration {
     }
     Process {   
         $erroFile = "./error_log/ssasconfig_" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".txt"
+        $ourObject = New-Object -TypeName psobject 
         try {
             $WindowsVersion = (systeminfo | Select-String 'OS Version:')[0].ToString().Split(':')[1].Trim()
-            if ($showWindowsVersion) {
+            if ($showWindowsServer) {
                 $output += "`n `nWindows Server:" + $env:COMPUTERNAME
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Windows Server" -Value $env:COMPUTERNAME
             }
-            if ($showshowWindowsServer) {
+            if ($showWindowsVersion) {
                 $output += "`n `nWindows Version:" + $WindowsVersion 
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Windows Version" -Value $WindowsVersion
             }
     
             $ssasInstanceName = "localhost"
@@ -165,12 +170,12 @@ function Get-SSASConfiguration {
             
             $ssasConnectionTimeout = $svr.ConnectionInfo.ConnectTimeout
             if ($showssasConnectionTimeout) {
-                $output = "`n ssasConnectionTimeout: $ssasConnectionTimeout"
+                $output = "`n SSAS Connection Timeout: $ssasConnectionTimeout"
+                $ourObject | Add-Member -MemberType NoteProperty -Name "SSAS Connection Timeout" -Value $ssasConnectionTimeout
             }
             $instanceName = "localhost"
             $server = New-Object -TypeName Microsoft.SqlServer.Management.Smo.Server -ArgumentList $instanceName
             $serverVersion = $server.Information.VersionString
-            
             # To create a new DB
             # $svr.databases.add("SSASDB")
             # $DB = $svr.databases.item("SSASDB")
@@ -179,7 +184,6 @@ function Get-SSASConfiguration {
             # $DB.update()
     
             $databaseRoles = $svr.Databases[0].Roles
-            $admins
             foreach ($role in $databaseRoles) {
                 if ($role.Name -eq "Administrator") {
                     $admins = $role.Members.ToString()
@@ -187,30 +191,39 @@ function Get-SSASConfiguration {
             }
             if ($showAdministrator) {
                 $output += "`n Administrator: $admins"
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Administrator" -Value $admins
             }
             # $output += "`n Roles: $roles"
-            $ssasVersion = $svr.Version
-            if ($showssasVersion) {
-                $output += "`nssasVersion: $ssasVersion"
-            }
-            if ($showshowssasVsSqlVersion) {
-                $output += "`n SSAS Version: $ssasVersion | ssqlVersion: $serverVersion"
-            }
             $ssasServerMode = $svr.ServerMode
             if ($showssasServerMode) {
-                $output += "`nssasServerMode: $ssasServerMode"
-            }            
-            $ssasCollation = $svr.Collation
-            if ($showssasCollation) {
-                $output += "`nssasCollation: $ssasCollation"
-            }
-            $ssasCubes = $svr.Cubes
-            if ($showssasCubes) {
-                $output += "`nssasCubes: $ssasCubes"
+                $output += "`nSSAS ServerMode: $ssasServerMode"
+                $ourObject | Add-Member -MemberType NoteProperty -Name "SSAS ServerMode" -Value $ssasServerMode
+            }  
+            $ssasVersion = $svr.Version
+            if ($showssasVersion) {
+                $output += "`nServer Version: $ssasVersion"
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Server Version" -Value $ssasVersion
             }
             $ssasEdition = $svr.Edition
             if ($showssasEdition) {
-                $output += "`nssasEdition: $ssasEdition"
+                $output += "`nSSAS Edition: $ssasEdition"
+                $ourObject | Add-Member -MemberType NoteProperty -Name "SSAS Edition" -Value $ssasEdition
+            }
+                      
+            $ssasCollation = $svr.Collation
+            if ($showssasCollation) {
+                $output += "`nCollation: $ssasCollation"
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Collation" -Value $ssasCollation
+            }
+            $ssasCubes = $svr.Cubes
+            if ($showssasCubes) {
+                $output += "`nSSAS Cubes: $ssasCubes"
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Cubes" -Value $ssasCubes
+            }
+            
+            if ($showssasVsSqlVersion) {
+                $output += "`nSSAS Version: $ssasVersion | ssqlVersion: $serverVersion"
+                $ourObject | Add-Member -MemberType NoteProperty -Name "SSAS Version Vs SQL Version" -Value "SSAS Version: $ssasVersion | ssqlVersion: $serverVersion"
             }
         }
         catch {
@@ -225,7 +238,8 @@ function Get-SSASConfiguration {
         $filePath = $outputFolder + "/" + $outputFile
         $output | Out-File -Append $filePath -Encoding UTF8
         Write-Host "Check the output at File "  $filePath -ForegroundColor Yellow
-        return $output | Format-List
+        return $ourObject
+        # return $output | Format-List
     }
 }
 

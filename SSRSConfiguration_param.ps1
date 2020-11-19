@@ -28,46 +28,65 @@ function Get-SSRSConiguration {
     
     Param
     (
-        [string]$user = $args[0],
-        [string]$pass = $args[1],
+        [Parameter(Mandatory = $true)]
+        [string]$windowsornetwork = $args[0],
+        [Parameter(Mandatory = $true)]
+        [string]$user = $args[1],
+        [Parameter(Mandatory = $true)]
+        [string]$pass = $args[2],
         [Parameter(Mandatory = $false)]
-        $showssrsConnectionTimeout = $args[2],
+        $showWindowsServer = $args[3],
         [Parameter(Mandatory = $false)]
-        $showssrsInstanceName = $args[3],
+        $showWindowsVersion = $args[4],
         [Parameter(Mandatory = $false)]
-        $showssrsVsSqlVersion = $args[4],
+        $showssrsConnectionTimeout = $args[5],
         [Parameter(Mandatory = $false)]
-        $showWebPortalUrl = $args[5],
+        $showServiceMode = $args[6],
         [Parameter(Mandatory = $false)]
-        $showcontentManagers = $args[6],
+        $showDatabaseName = $args[7],
         [Parameter(Mandatory = $false)]
-        $showreportManagerUrl = $args[7],
+        $showDatabaseServerName = $args[8],
         [Parameter(Mandatory = $false)]
-        $showSecureConnectionLevel = $args[8],
+        $showssrsInstanceName = $args[9],
         [Parameter(Mandatory = $false)]
-        $showSenderEmailAddress  = $args[9],
+        $showssrsVsSqlVersion = $args[10],
         [Parameter(Mandatory = $false)]
-        $showexecAccount = $args[10],
+        $showWebPortalUrl = $args[11],
         [Parameter(Mandatory = $false)]
-        $showssrsDBmdfPath = $args[11],
+        $showcontentManagers = $args[12],
         [Parameter(Mandatory = $false)]
-        $showssrsDBmdfSize = $args[12],
+        $showreportManagerUrl = $args[13],
         [Parameter(Mandatory = $false)]
-        $showssrsDBldfSize = $args[13],
+        $showSecureConnectionLevel = $args[14],
         [Parameter(Mandatory = $false)]
-        $showssrsTempDBmdfSize = $args[14],
+        $showSenderEmailAddress  = $args[15],
         [Parameter(Mandatory = $false)]
-        $showssrsTempDBldfPath = $args[16],
+        $showexecAccount = $args[16],
+
         [Parameter(Mandatory = $false)]
-        $showssrsTempDBldfSize = $args[18]
+        $showssrsDBmdfPath = $args[17],
+        [Parameter(Mandatory = $false)]
+        $showssrsDBmdfSize = $args[18],
+        [Parameter(Mandatory = $false)]
+        $showssrsDBldfPath = $args[19],
+        [Parameter(Mandatory = $false)]
+        $showssrsDBldfSize = $args[20],
+
+        [Parameter(Mandatory = $false)]
+        $showssrsTempDBmdfPath = $args[21],
+        [Parameter(Mandatory = $false)]
+        $showssrsTempDBmdfSize = $args[22],
+        [Parameter(Mandatory = $false)]
+        $showssrsTempDBldfPath = $args[23],
+        [Parameter(Mandatory = $false)]
+        $showssrsTempDBldfSize = $args[24]
     )
 
     Begin {
         $output = ""
         $outputFolder = "./Output/SSRSConfiguration"
         $outputFile = "/SSRSConfiguration_" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".csv"
-        $password = ConvertTo-SecureString $pass -AsPlainText -Force
-        $pccred = New-Object System.Management.Automation.PSCredential ($user, $password )
+       
         If (!(Test-Path $outputFolder)) {
             New-Item -Path $outputFolder -ItemType Directory
         }
@@ -89,6 +108,20 @@ function Get-SSRSConiguration {
 
         }
         $folderName = "/"
+        if (!$showWindowsServer) {
+            if (($showWindowsServer -eq 0)) {
+                $showWindowsServer = $false
+            } else {
+                $showWindowsServer = $true
+            }
+        }
+        if (!$showWindowsVersion) {
+            if (($showWindowsVersion -eq 0)) {
+                $showWindowsVersion = $false
+            } else {
+                $showWindowsVersion = $true
+            }
+        }
         if (!$showssrsConnectionTimeout) {
             if (($showssrsConnectionTimeout -eq 0)) {
                 $showssrsConnectionTimeout = $false
@@ -96,6 +129,29 @@ function Get-SSRSConiguration {
                 $showssrsConnectionTimeout = $true
             }
         }
+
+        if (!$showServiceMode) {
+            if (($showServiceMode -eq 0)) {
+                $showServiceMode = $false
+            } else {
+                $showServiceMode = $true
+            }
+        }
+        if (!$showDatabaseName) {
+            if (($showDatabaseName -eq 0)) {
+                $showDatabaseName = $false
+            } else {
+                $showDatabaseName = $true
+            }
+        }
+        if (!$showDatabaseServerName) {
+            if (($showDatabaseServerName -eq 0)) {
+                $showDatabaseServerName = $false
+            } else {
+                $showDatabaseServerName = $true
+            }
+        }
+
         if (!$showssrsInstanceName) {
             if (($showssrsInstanceName -eq 0)) {
                 $showssrsInstanceName = $false
@@ -166,11 +222,25 @@ function Get-SSRSConiguration {
                 $showssrsDBmdfSize = $true
             }
         }
+        if (!$showssrsDBldfPath) {
+            if (($showssrsDBldfPath -eq 0)) {
+                $showssrsDBldfPath = $false
+            } else {
+                $showssrsDBldfPath = $true
+            }
+        }
         if (!$showssrsDBldfSize) {
             if (($showssrsDBldfSize -eq 0)) {
                 $showssrsDBldfSize = $false
             } else {
                 $showssrsDBldfSize = $true
+            }
+        }
+        if (!$showssrsTempDBmdfPath) {
+            if (($showssrsTempDBmdfPath -eq 0)) {
+                $showssrsTempDBmdfPath = $false
+            } else {
+                $showssrsTempDBmdfPath = $true
             }
         }
         if (!$showssrsTempDBmdfSize) {
@@ -194,24 +264,57 @@ function Get-SSRSConiguration {
                 $showssrsTempDBldfSize = $true
             }
         }
+
+        $useCredential = $true
+        if ($windowsornetwork -eq " ") {
+            $windowsornetwork = "w"
+        }
+        if (($windowsornetwork -eq "windows") -or ($windowsornetwork -eq "w")) {
+            $useCredential = $false
+        } else {
+            if ($user -and $pass) {
+                $password = ConvertTo-SecureString $pass -AsPlainText -Force
+                $pccred = New-Object System.Management.Automation.PSCredential ($user, $password )
+            }
+        }
     }
     Process {   
-        
         $servername = $env:COMPUTERNAME
         $instanceName = "localhost"
         $erroFile = "./error_log/ssrsconfig_" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".txt"
+        $ourObject = New-Object -TypeName psobject 
         try {
             $server = New-Object -TypeName Microsoft.SqlServer.Management.Smo.Server -ArgumentList $instanceName
             $serverVersion = $server.Information.VersionString
             $folder = $server.Information.MasterDBLogPath
            
-           # $ssrsConnectionTimeout = (Invoke-Sqlcmd -Query "SELECT Value FROM [ReportServer].[dbo].ConfigurationInfo where Name = 'SessionTimeout'" -User $user -Password $pass) | Select-Object -ExpandProperty Value
-            $ssrsConnectionTimeout = (Invoke-Sqlcmd -Query "SELECT Value FROM [ReportServer].[dbo].ConfigurationInfo where Name = 'SessionTimeout'" -Credential $pccred) | Select-Object -ExpandProperty Value
-            if ($showssrsConnectionTimeout) {
-                $output += "`n ssrsConnectionTimeout: $ssrsConnectionTimeout"
+            if ($showWindowsServer) {
+                $output += "`n Windows Server:" + $servername
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Windows Server" -Value $servername
             }
 
-            $serverVersion = (Invoke-Sqlcmd -Query "select version_major from msdb.dbo.msdb_version" -Credential $pccred) | Select-Object -ExpandProperty version_major
+            $WindowsVersion = (systeminfo | Select-String 'OS Version:')[0].ToString().Split(':')[1].Trim()
+            if ($showWindowsVersion) {
+                $output += "`n Windows Version:" + $WindowsVersion
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Windows Version" -Value $WindowsVersion
+            }
+           # $ssrsConnectionTimeout = (Invoke-Sqlcmd -Query "SELECT Value FROM [ReportServer].[dbo].ConfigurationInfo where Name = 'SessionTimeout'" -User $user -Password $pass) | Select-Object -ExpandProperty Value
+            if ($useCredential -eq $true) {
+                $ssrsConnectionTimeout = (Invoke-Sqlcmd -Query "SELECT Value FROM [ReportServer].[dbo].ConfigurationInfo where Name = 'SessionTimeout'" -Credential $pccred) | Select-Object -ExpandProperty Value
+            } else {
+                $ssrsConnectionTimeout = (Invoke-Sqlcmd -Query "SELECT Value FROM [ReportServer].[dbo].ConfigurationInfo where Name = 'SessionTimeout'") | Select-Object -ExpandProperty Value
+            }
+            if ($showssrsConnectionTimeout) {
+                $output += "`n ssrsConnectionTimeout: $ssrsConnectionTimeout"
+                $ourObject | Add-Member -MemberType NoteProperty -Name "SSRS Connection Timeout" -Value $ssrsConnectionTimeout
+            }
+
+            if ($useCredential -eq $true) {
+                $serverVersion = (Invoke-Sqlcmd -Query "select version_major from msdb.dbo.msdb_version" -Credential $pccred) | Select-Object -ExpandProperty version_major
+            } else {
+                $serverVersion = (Invoke-Sqlcmd -Query "select version_major from msdb.dbo.msdb_version") | Select-Object -ExpandProperty version_major
+            }
+
             $rs = (Get-WmiObject -namespace root\Microsoft\SqlServer\ReportServer  -class __Namespace) | Select-Object -ExpandProperty Name
             $nspace = "root\Microsoft\SQLServer\ReportServer\$rs\v$serverVersion\Admin"
             $RSServers = Get-WmiObject -Namespace $nspace -class MSReportServer_ConfigurationSetting -ComputerName $servername -ErrorVariable perror -ErrorAction SilentlyContinue
@@ -221,47 +324,44 @@ function Get-SSRSConiguration {
     
                 $ssrsInstanceName = $r.InstanceName
                 if ($showssrsInstanceName) {
-                    $output += "`n ssrsInstanceName: $ssrsInstanceName"
+                    $output += "`n ReportServer InstanceName: $ssrsInstanceName"
+                    $ourObject | Add-Member -MemberType NoteProperty -Name "ReportServer InstanceName" -Value $ssrsInstanceName
                 }
                 
                 $ssrsVers = $r.version
                 if ($showssrsVsSqlVersion) {
-                    $output += "`n ssrsVers: $ssrsVers; SQL Version: $serverVersion"
+                    $output += "`n SSRS Version: $ssrsVers; SQL Version: $serverVersion"
+                    $ourObject | Add-Member -MemberType NoteProperty -Name "SSRS Version" -Value $ssrsVers
+                    $ourObject | Add-Member -MemberType NoteProperty -Name "SQL Version" -Value $serverVersion
+                }
+                if ($showServiceMode) {
+                    if ($r.IsSharePointIntegrated -eq $false) {
+                        $output += "`n Service Mode: Native"
+                        $ourObject | Add-Member -MemberType NoteProperty -Name "Service Mode" -Value "Native"
+                    } else {
+                        $output += "`n Service Mode: Sharepoint"
+                        $ourObject | Add-Member -MemberType NoteProperty -Name "Service Mode" -Value "Sharepoint"
+                    }
                 }
                 $ssrsDB = $r.DatabaseName
-                # $output += "`n ssrsDB: $ssrsDB"
+                if ($showDatabaseName) {
+                    $output += "`n Database : $ssrsDB"
+                    $ourObject | Add-Member -MemberType NoteProperty -Name "Database" -Value $ssrsDB
+                }
+                if ($showDatabaseServerName) {
+                    $output += "`n Database Location: " + $r.DatabaseServerName
+                    $ourObject | Add-Member -MemberType NoteProperty -Name "Database Location" -Value $r.DatabaseServerName
+                }
                 $vPath = $r.VirtualDirectoryReportServer
                 $urls = $r.ListReservedUrls()
                 $urls = $urls.UrlString[0]
                 $WebPortalUrl = $urls.Replace('+', $servername) + "/$vPath"
                 if ($showWebPortalUrl) {
                     $output += "`n WEB Service URL: $WebPortalUrl"
+                    $ourObject | Add-Member -MemberType NoteProperty -Name "WEB Service URL" -Value $WebPortalUrl
                 }
                 $ReportServerUri = $WebPortalUrl + "/ReportService2010.asmx"
                 $InheritParent = $true
-                #New Code - starts
-                # $ReportServerUri
-                # $rsProxy = New-WebServiceProxy -Uri $ReportServerUri -UseDefaultCredential
-                # #List out all subfolders under the parent directory
-                # $items = $rsProxy.ListChildren("/", $true)
-                        
-                # #Iterate through every folder 		 
-                # $contentManagers = ""
-                # "333"
-                # $items
-                # "444"
-                # foreach($item in $items)
-                # {
-                #     $item
-                #     $Policies = $rsProxy.GetPolicies($Item.Path, [ref]$InheritParent)
-                #     foreach ($Policy in $Policies) {
-                #         $Policy
-                #         if ($Policy.Roles.Name -eq "Content Manager") {
-                #             $contentManagers += $Policy.GroupUserName + ","
-                #         }
-                #     }
-                # }
-                #New code - ends
 
                 $rsProxy = New-WebServiceProxy -Uri $ReportServerUri -UseDefaultCredential
                 $items = $rsProxy.GetPolicies($folderName, [ref]$InheritParent)
@@ -273,6 +373,7 @@ function Get-SSRSConiguration {
                 }
                 if ($showcontentManagers) {
                     $output += "`n Content Managers: $contentManagers"
+                    $ourObject | Add-Member -MemberType NoteProperty -Name "Content Managers" -Value $contentManagers
                 }
     
                 if ($r.VirtualDirectoryReportManager -ne "") {
@@ -283,60 +384,74 @@ function Get-SSRSConiguration {
                 }
                 if ($showreportManagerUrl) {
                     $output += "`n Report Manager URL: $reportManagerUrl"
+                    $ourObject | Add-Member -MemberType NoteProperty -Name "Report Manager URL" -Value $reportManagerUrl
                 }
                 $SecureConnectionLevel = $r.SecureConnectionLevel
                 if ($showSecureConnectionLevel) {
                     $output += "`n Secure Connection Level: $SecureConnectionLevel"
+                    $ourObject | Add-Member -MemberType NoteProperty -Name "Secure Connection Level" -Value $SecureConnectionLevel
                 }
                 $SenderEmailAddress = $r.SenderEmailAddress
                 if ($showSenderEmailAddress) {
                     if ($SenderEmailAddress -ne "") {
                         $output += "`n E-Mail Setting: $SenderEmailAddress"
+                        $ourObject | Add-Member -MemberType NoteProperty -Name "E-Mail Setting" -Value $SenderEmailAddress
                     }
                     else {
                         $output += "`n E-Mail Setting: N/A"
+                        $ourObject | Add-Member -MemberType NoteProperty -Name "E-Mail Setting" -Value "N/A"
                     }
                 }
                 if ($showexecAccount) {
                     $execAccount = $r.UnattendedExecutionAccount
                     if ($execAccount -ne "") {
                         $output += "`n Execution Account: $execAccount"
+                        $ourObject | Add-Member -MemberType NoteProperty -Name "SSRS Execution Account" -Value $execAccount
                     }
                     else {
                         $output += "`n SSRS Excution account is not configured"
+                        $ourObject | Add-Member -MemberType NoteProperty -Name "SSRS Execution Account" -Value "Not Configured"
                     }
                 }
                 $ssrsDBmdfPath = $folder + "\" + $ssrsDB + ".mdf"
                 if ($showssrsDBmdfPath) {
-                    $output += "`n ssrsDBmdfPath: $ssrsDBmdfPath"
+                    $output += "`n SSRS DB MDF Path: $ssrsDBmdfPath"
+                    $ourObject | Add-Member -MemberType NoteProperty -Name "SSRS DB MDF Path" -Value $ssrsDBmdfPath
                 }
                 $ssrsDBmdfSize = (Get-Item $ssrsDBmdfPath).length / 1MB
                 if ($showssrsDBmdfSize) {
-                    $output += "`n ssrsDBmdfSize: $ssrsDBmdfSize" + " MB"
+                    $output += "`n SSRS DB MDF Size: $ssrsDBmdfSize" + " MB"
+                    $ourObject | Add-Member -MemberType NoteProperty -Name "SSRS DB MDF Size" -Value $ssrsDBmdfSize
                 }
                 $ssrsDBldfPath = $folder + "\" + $ssrsDB + "_log.ldf"
                 if ($showssrsDBldfPath) {
-                    $output += "`n ssrsDBldfPath: $ssrsDBldfPath"
+                    $output += "`n SSRS DB LDF Path: $ssrsDBldfPath"
+                    $ourObject | Add-Member -MemberType NoteProperty -Name "SSRS DB LDF Path" -Value $ssrsDBldfPath
                 }
                 $ssrsDBldfSize = (Get-Item $ssrsDBldfPath).length / 1MB
                 if ($showssrsDBldfSize) {
-                    $output += "`n ssrsDBldfSize: $ssrsDBldfSize" + " MB"
+                    $output += "`n SSRS DB LDF Size: $ssrsDBldfSize" + " MB"
+                    $ourObject | Add-Member -MemberType NoteProperty -Name "SSRS DB LDF Size" -Value $ssrsDBldfSize
                 }
                 $ssrsTempDBmdfPath = $folder + "\" + $ssrsDB + "TempDB.mdf"
                 if ($showssrsTempDBmdfPath) {
-                    $output += "`n ssrsTempDBldfPath: $ssrsTempDBmdfPath"
+                    $output += "`n SSRS Temp DB MDF Path: $ssrsTempDBmdfPath"
+                    $ourObject | Add-Member -MemberType NoteProperty -Name "SSRS Temp DB MDF Path" -Value $ssrsTempDBmdfPath
                 }
                 $ssrsTempDBmdfSize = (Get-Item $ssrsTempDBmdfPath).length / 1MB
                 if ($showssrsTempDBmdfSize) {
-                    $output += "`n ssrsTempDBmdfSize: $ssrsTempDBmdfSize" + " MB"
+                    $output += "`n SSRS Temp DB MDF Size: $ssrsTempDBmdfSize" + " MB"
+                    $ourObject | Add-Member -MemberType NoteProperty -Name "SSRS Temp DB MDF Size" -Value $ssrsTempDBmdfSize
                 }
                 $ssrsTempDBldfPath = $folder + "\" + $ssrsDB + "TempDB_log.ldf"
                 if ($showssrsTempDBldfPath) {
-                    $output += "`n ssrsTempDBldfPath: $ssrsTempDBldfPath"
+                    $output += "`n SSRS Temp DB LDF Path: $ssrsTempDBldfPath"
+                    $ourObject | Add-Member -MemberType NoteProperty -Name "SSRS Temp DB LDF Path" -Value $ssrsTempDBldfPath
                 }
                 $ssrsTempDBldfSize = (Get-Item $ssrsTempDBldfPath).length / 1MB
                 if ($showssrsTempDBldfSize) {
-                    $output += "`n ssrsTempDBldfSize: $ssrsTempDBldfSize" + " MB"
+                    $output += "`n SSRS Temp DB LDF Size: $ssrsTempDBldfSize" + " MB"
+                    $ourObject | Add-Member -MemberType NoteProperty -Name "SSRS Temp DB LDF Size" -Value $ssrsTempDBldfSize
                 }
             }
         }
@@ -352,7 +467,8 @@ function Get-SSRSConiguration {
         $filePath = $outputFolder + "/" + $outputFile
         $output | Out-File -Append $filePath -Encoding UTF8
         Write-Host "Check the output at File "  $filePath -ForegroundColor Yellow
-        return $output | Format-List
+        return $ourObject
+       # return $output | Format-List
     }
 }
 

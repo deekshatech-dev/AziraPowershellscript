@@ -67,6 +67,7 @@ function Get-SSRSConiguration {
                 }
             }
             foreach ($r in $RSServers) {
+                $r
                 $folder = $server.Information.MasterDBLogPath
     
                 $ssrsInstanceName = $r.InstanceName

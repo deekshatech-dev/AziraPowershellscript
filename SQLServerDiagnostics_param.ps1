@@ -17,7 +17,9 @@ function Get-ServerDiagnostics {
     
     Param
     (
+        [Parameter(Mandatory = $true)]
         [string]$user = $args[0],
+        [Parameter(Mandatory = $true)]
         [string]$pass = $args[1],
         [Parameter(Mandatory = $false)]
         $showServerName = $args[2],
@@ -235,9 +237,10 @@ function Get-ServerDiagnostics {
             }
             if ($showtempDbMoreThanOneFile) {
                 $output += "`n tempdbMoreThanOneFile: $tempdbMoreThanOneFile"
-                $ourObject | Add-Member -MemberType NoteProperty -Name "TempDB Only Has 1 Data File? " -Value tempdbMoreThanOneFile
+                $ourObject | Add-Member -MemberType NoteProperty -Name "TempDB Only Has 1 Data File? " -Value $tempdbMoreThanOneFile
             }
         
+            # Change the selection of the backupfolder
             $backupFolder = $server.Settings.BackupDirectory        
             $modelback = "Never"
             $masterback = "Never"
