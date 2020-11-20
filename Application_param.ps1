@@ -20,8 +20,11 @@ function Get-MachineDetails {
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$HostName = $args[0],
+        [Parameter(Mandatory = $false)]
         [string]$port = $args[1],
+        [Parameter(Mandatory = $true)]
         [string]$user = $args[2],
+        [Parameter(Mandatory = $true)]
         [string]$pass = $args[3],
         [Parameter(Mandatory = $false)]
         $showtotalCpuCount = $args[4],
@@ -74,8 +77,6 @@ function Get-MachineDetails {
         $totalspace = 0
         $outputFolder = "./Output/Application"
         $outputFile = "/Application_" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".csv"
-        $password = ConvertTo-SecureString $pass -AsPlainText -Force
-        $pccred = New-Object System.Management.Automation.PSCredential ($user, $password )
         If (!(Test-Path $outputFolder)) {
             New-Item -Path $outputFolder -ItemType Directory
         }
@@ -250,6 +251,18 @@ function Get-MachineDetails {
                 $showstlsv10 = $true
             }
         }
+        $useCredential = $true
+        if ($windowsornetwork -eq " ") {
+            $windowsornetwork = "w"
+        }
+        if (($windowsornetwork -eq "windows") -or ($windowsornetwork -eq "w")) {
+            $useCredential = $false
+        } else {
+            if ($user -and $pass) {
+                $password = ConvertTo-SecureString $pass -AsPlainText -Force
+                $pccred = New-Object System.Management.Automation.PSCredential ($user, $password )
+            }
+        }
     }
     Process {
         $erroFile = "./error_log/application" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString()
@@ -272,7 +285,12 @@ function Get-MachineDetails {
              if($UpdateDateObject -eq "01/01/1601"){
                 $UpdateDateObject = "N/A"
             }
-            $totalCpuCount = ( Invoke-Sqlcmd -Query "SELECT i.cpu_count from sys.dm_os_sys_info i" -Credential $pccred).cpu_count
+
+            if ($useCredential -eq $true) {
+                $totalCpuCount = ( Invoke-Sqlcmd -Query "SELECT i.cpu_count from sys.dm_os_sys_info i" -Credential $pccred).cpu_count
+            } else {
+                $totalCpuCount = ( Invoke-Sqlcmd -Query "SELECT i.cpu_count from sys.dm_os_sys_info i").cpu_count
+            }
             $WindowsVersion = (systeminfo | Select-String 'OS Version:')[0].ToString().Split(':')[1].Trim()
             $is64BitOS = [System.Environment]::Is64BitOperatingSystem
             $is64BitProcess = [System.Environment]::Is64BitProcess
@@ -284,7 +302,11 @@ function Get-MachineDetails {
           
             
 
-            $connectionTimeout = ( Invoke-Sqlcmd -Query "sp_configure 'Remote Query Timeout'" -Credential $pccred).config_value
+            if ($useCredential -eq $true) {
+                $connectionTimeout = ( Invoke-Sqlcmd -Query "sp_configure 'Remote Query Timeout'" -Credential $pccred).config_value
+            } else {
+                $connectionTimeout = ( Invoke-Sqlcmd -Query "sp_configure 'Remote Query Timeout'").config_value
+            }
             
             $enabledProtocols = [enum]::GetNames([Net.SecurityProtocolType])
             $ssl2 = "Disabled"
@@ -355,34 +377,46 @@ function Get-MachineDetails {
 
             if ($showtotalCpuCount) {
                 $output += "`nTotal CPU Count $totalCpuCount"
+                $ourObject | Add-Member -MemberType NoteProperty -Name "nTotal CPU Count" -Value $totalCpuCount
             }
             if ($showUpdateDateObject) {
                 $output += "`nLast Update Dates $UpdateDateObject"
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Last Update Dates" -Value $UpdateDateObject
             }
             if ($showAZISService) {
                 $output += "`nWindows Service [AZ IS Scheduler Service]:" + $AZISService
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Windows Service [AZ IS Scheduler Service]" -Value $AZISService
             }
             if ($showAZTaskService) {
                 $output += "`nWindows Service [AZ Task Scheduler Service]:" + $AZTaskService
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Windows Service [AZ Task Scheduler Service]" -Value $AZTaskService
             }
             if ($showServerName) {
                 $output += "`nWindows Sever:" + $ServerName
-                $output += "`nWorkstation Name : " + $ServerName
+                $output += "`nWorkstation Name: " + $ServerName
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Windows Sever" -Value $ServerName
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Workstation Name" -Value $ServerName
             }
             if ($showWindowsVersion) {
                 $output += "`nWindows Version:" + $WindowsVersion
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Windows Version" -Value $WindowsVersion
             }
             if ($showis64BitOS) {
                 $output += "`nIs 64 Bit OS:" + $is64BitOS
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Is 64 Bit OS" -Value $is64BitOS
             }
             if ($showis64BitProcess) {
                 $output += "`nIs 64 Bit Process:" + $is64BitProcess
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Is 64 Bit Process" -Value $is64BitProcess
             }
             if ($showdomain) {
                 $output += "`nDomain:" + $domain
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Domain" -Value $domain
             }
             if ($showRam) {
                 $output += "`nTotal Physical Memory:" + $RAMGB + " GB"
+                $ramvalue = "" + $RAMGB + " GB"
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Total Physical Memory" -Value $ramvalue
             }
 
             $output += "`n================================================"
@@ -390,18 +424,23 @@ function Get-MachineDetails {
             $output += "`n================================================"
             if ($showssl2) {
                 $output += "`nSecurity [Client SSL 2.0] Is Client SSL 2.0 is " + $ssl2
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Security [Client SSL 2.0] Is Client SSL 2.0 is " -Value $ssl2
             }
             if ($showssl3) {
                 $output += "`nSecurity [Client SSL 3.0] Is Client SSL 3.0 is " + $ssl3
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Security [Client SSL 3.0] Is Client SSL 3.0 is " -Value $ssl3
             }
             if ($showtls) {
                 $output += "`nSecurity [Client TLS 1.0] Is Client TLS 1.0 is " + $tls
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Security [Client TLS 1.0] Is Client TLS 1.0 is " -Value $tls
             }
             if ($showtls11) {
                 $output += "`nSecurity [Client TLS 1.1] Is Client TLS 1.1 is " + $tls11
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Security [Client TLS 1.1] Is Client TLS 1.1 is " -Value $tls11
             }
             if ($showtls12) {
                 $output += "`nSecurity [Client TLS 1.2] Is Client TLS 1.2 is " + $tls12
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Security [Client TLS 1.2] Is Client TLS 1.2 is  " -Value $tls12
             }
             $output += "`n================================================"
             $output += "`n================================================"
@@ -409,90 +448,33 @@ function Get-MachineDetails {
             $output += "`n================================================"
             if ($showssslv2) {
                 $output += "`nSecurity [Server SSL 2.0] Is Client SSL 2.0 is " + $ssslv2
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Security [Server SSL 2.0] Is Client SSL 2.0 is  " -Value $ssslv2
             }
             if ($showssslv3) {
                 $output += "`nSecurity [Server SSL 3.0] Is Client SSL 3.0 is " + $ssslv3
-
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Security [Server SSL 3.0] Is Client SSL 3.0 is  " -Value $ssslv3
             }
             if ($showstlsv10) {
                 $output += "`nSecurity [Server TLS 1.0] Is Client TLS 1.0 is " + $stlsv10
-
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Security [Server TLS 1.0] Is Client TLS 1.0 is  " -Value $stlsv10
             }
             if ($showstlsv11) {
                 $output += "`nSecurity [Server TLS 1.1] Is Client TLS 1.1 is " + $stlsv11 
-                
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Security [Server TLS 1.1] Is Client TLS 1.1 is  " -Value $stlsv11
             }
             if ($showstlsv12) {
                 $output += "`nSecurity [Server TLS 1.2] Is Client TLS 1.2 is " + $stlsv12
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Security [Server TLS 1.2] Is Client TLS 1.2 is  " -Value $stlsv12
             }
             $output += "`n================================================"
 
             if ($showconnectionTimeout){
                 $output += "`nSql Server Connection Timeout: $connectionTimeout"
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Sql Server Connection Timeout  " -Value $connectionTimeout
             }
             if ($showRecommendedCPU) {
                 $output += "`nRecommended [SQL Server] : CPUCore=" + $CPUCore + ",RAM=" + $RAMGB + " GB,DISK=" + $totalspace + " GB"
-            }
-        }
-        catch {
-            $err = $_
-            Set-Content -Path $erroFile -Value $err 
-            $StackTrace = $_.ScriptStackTrace 
-            Set-Content -Path $erroFile -Value $StackTrace
-        }
-       
-    }
-    End {
-        return $output | Format-List
-    }
-}
-function Test-ServerSSLSupport {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-        [ValidateNotNullOrEmpty()]
-        [string]$HostName = $args[0],
-        [string]$port = 443
-    )
-    process {
-        $erroFile = "./error_log/applicationserverssl" + (get-date -f MM_dd_yyyy_HH_mm_ss).ToString() + ".txt"
-
-        try {
-           
-            $RetValue = New-Object psobject -Property @{
-                Host          = $HostName
-                Port          = $port
-                SSLv2         = $false
-                SSLv3         = $false
-                TLSv1_0       = $false
-                TLSv1_1       = $false
-                TLSv1_2       = $false
-                KeyExhange    = $null
-                HashAlgorithm = $null
-            }
-            "ssl2", "ssl3", "tls", "tls11", "tls12" | % {
-                $TcpClient = New-Object Net.Sockets.TcpClient
-                $TcpClient.Connect($RetValue.Host, $RetValue.Port)
-                $SslStream = New-Object Net.Security.SslStream $TcpClient.GetStream()
-                $SslStream.ReadTimeout = 15000
-                $SslStream.WriteTimeout = 15000
-                try {
-                    $SslStream.AuthenticateAsClient($RetValue.Host, $null, $_, $false)
-                    $RetValue.KeyExhange = $SslStream.KeyExchangeAlgorithm
-                    $RetValue.HashAlgorithm = $SslStream.HashAlgorithm
-                    $status = $true
-                }
-                catch {
-                    $status = $false
-                }
-                switch ($_) {
-                    "ssl2" { $RetValue.SSLv2 = $status }    
-                    "ssl3" { $RetValue.SSLv3 = $status }    
-                    "tls" { $RetValue.TLSv1_0 = $status }    
-                    "tls11" { $RetValue.TLSv1_1 = $status }    
-                    "tls12" { $RetValue.TLSv1_2 = $status }    
-                }
-    
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Recommended [SQL Server]  " -Value "CPUCore=" + $CPUCore + ",RAM=" + $RAMGB + " GB,DISK=" + $totalspace + " GB"
             }
         }
         catch {
@@ -502,17 +484,15 @@ function Test-ServerSSLSupport {
             Set-Content -Path $erroFile -Value $ErrorBlock
             "Some error occured check " + $erroFile + " for stacktrace"
         }
-        
-        # $RetValue 
+       
     }
     End {
-        #$output | Export-Csv -Path $outpuFile
         $filePath = $outputFolder + "/" + $outputFile
-        $output | Out-File -Append $filePath -Encoding UTF8
+        $ourObject | Out-File -Append $filePath -Encoding UTF8
         Write-Host "Check the output at File "  $filePath -ForegroundColor Yellow
-        return $output | Format-List
+        return $ourObject
+        # return $output | Format-List
     }
 }
-
 
 Get-MachineDetails

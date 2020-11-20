@@ -171,11 +171,13 @@ function Get-IIsConfiguration {
             if ($ShowWindowsVersion) {
                 $WindowsVersion = (systeminfo | Select-String 'OS Version:')[0].ToString().Split(':')[1].Trim()
                 $output += "`nWindows Version:" + $WindowsVersion
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Windows Version" -Value $WindowsVersion
             }
 
             if ($ShowIISVersion) {
                 $iisversion = (get-itemproperty HKLM:\SOFTWARE\Microsoft\InetStp\  | select setupstring,versionstring ).versionstring
                 $output += "`nIIS Version:" + $iisversion
+                $ourObject | Add-Member -MemberType NoteProperty -Name "IIS Version" -Value $iisversion
             }
 
             if ($ShowIISFeature) {
@@ -185,6 +187,7 @@ function Get-IIsConfiguration {
                 $totalfeatures = Get-WindowsOptionalFeature -Online | Where-Object { ($_.FeatureName -like 'IIS-*') };
                 $runningWebservices = ($features.Length - $FTPfeatures.Length).ToString() + " of " + ($totalfeatures.Length).ToString() + " Installed"
                 $output += "`n Web Server IIS Role and Sub Features except FTP: $runningWebservices"
+                $ourObject | Add-Member -MemberType NoteProperty -Name "Web Server IIS Role and Sub Features except FTP" -Value $runningWebservices
                 $output += "`n =============================="
                 $output += "`n Feature List"
                 $output += "`n =============================="
@@ -222,14 +225,18 @@ function Get-IIsConfiguration {
                 $timeoutObj = Get-WebConfigurationProperty -name $name -filter $filter -pspath $pspath 
                 $timeout = $timeoutObj.Value.TotalSeconds
                 $output += "`n IIS Connection Timeout: $timeout"
+                $ourObject | Add-Member -MemberType NoteProperty -Name "IIS Connection Timeout" -Value $timeout
                 
                 $IisSites = Get-IISSite | Select -Property Name
                 $output += "`n ==========================================="
                 $output += "`n IIS Hosted Websites:"
                 $output += "`n ==========================================="
+                $index = 0
                 foreach ($item in $IisSites) {
                     $websiteName = $item.Name
                     $output += "`n $websiteName"
+                    $index = $index + 1
+                    $ourObject | Add-Member -MemberType NoteProperty -Name "Websites " + $index -Value $websiteName
                 }
                 $output += "`n ==========================================="
                 
@@ -243,9 +250,11 @@ function Get-IIsConfiguration {
                 $dotNet35 = Get-WindowsOptionalFeature -Online | Where-Object { ($_.FeatureName -like "NETFx3") } | select -Property State
                 if ($dotNet35.State -like "Enabled") {
                     $output += "`n .NET Framework 3.5 including all sub-features are INSTALLED"
+                    $ourObject | Add-Member -MemberType NoteProperty -Name ".NET Framework 3.5" -Value ".NET Framework 3.5 including all sub-features are INSTALLED"
                 }
                 else {
                     $output += "`n .NET Framework 3.5 including all sub-features are NOT INSTALLED"
+                    $ourObject | Add-Member -MemberType NoteProperty -Name ".NET Framework 3.5" -Value ".NET Framework 3.5 including all sub-features are NOT INSTALLED"
                 }
             }
 
@@ -253,9 +262,11 @@ function Get-IIsConfiguration {
                 $dotNet45 = Get-WindowsOptionalFeature -Online | Where-Object { ($_.FeatureName -like "NetFx4-*") } | select -Property State
                 if ($dotNet45.State -like "Enabled") {
                     $output += "`n .NET Framework 4.5 including all sub-features are INSTALLED"
+                    $ourObject | Add-Member -MemberType NoteProperty -Name ".NET Framework 4.5" -Value ".NET Framework 4.5 including all sub-features are INSTALLED"
                 }
                 else {
                     $output += "`n .NET Framework 4.5 including all sub-features are NOT INSTALLED"
+                    $ourObject | Add-Member -MemberType NoteProperty -Name ".NET Framework 4.5" -Value ".NET Framework 4.5 including all sub-features are NOT INSTALLED"
                 }
             }
             
@@ -263,9 +274,11 @@ function Get-IIsConfiguration {
                 $windowsProcessActivationService = Get-WindowsOptionalFeature -Online | Where-Object { ($_.FeatureName -like "WAS-WindowsActivationService") } | select -Property State
                 if ($windowsProcessActivationService.State -like "Enabled") {
                     $output += "`n Windows Process Activation Service is INSTALLED"
+                    $ourObject | Add-Member -MemberType NoteProperty -Name "Windows Activation Service" -Value "Windows Process Activation Service is INSTALLED"
                 }
                 else {
                     $output += "`n Windows Process Activation Service is NOT INSTALLED"
+                    $ourObject | Add-Member -MemberType NoteProperty -Name "Windows Activation Service" -Value "Windows Process Activation Service is NOT INSTALLED"
                 }
             }
 
@@ -273,45 +286,55 @@ function Get-IIsConfiguration {
                 $windowsHostableWebCore = Get-WindowsOptionalFeature -Online | Where-Object { ($_.FeatureName -like "Web-WHC") }
                 if ($windowsHostableWebCore.State -like "Enabled") {
                     $output += "`n Hostable Web Core is INSTALLED"
+                    $ourObject | Add-Member -MemberType NoteProperty -Name "Hostable Web Core" -Value "Hostable Web Core is INSTALLED"
                 }
                 else {
                     $output += "`n Hostable Web Core is NOT INSTALLED"
+                    $ourObject | Add-Member -MemberType NoteProperty -Name "Hostable Web Core" -Value "Hostable Web Core is NOT INSTALLED"
                 }
             }
 
             if ($ShowCompressionSettingApplicationDynamicTypes) {
                 if (((Get-WebConfigurationProperty -pspath 'MACHINE/WEBROOT/APPHOST' -filter "system.webServer/httpCompression" -Name "dynamicTypes").Collection  | Where-Object { $_.mimeType -eq 'application/json' }).Length -eq 1) {
                     $output += "`n Value - Application/json configured in IIS Configuration Editor->System.WebServer/httpCompression/dynamicTypes"
+                    $ourObject | Add-Member -MemberType NoteProperty -Name "Compression Setting Application DyanamicType" -Value "Value - Application/json configured in IIS Configuration Editor->System.WebServer/httpCompression/dynamicTypes"
                 }
                 else {
                     $output += "`n Value - Application/json - is not found in IIS Configuration Editor->System.WebServer/httpCompression/dynamicTypes"
+                    $ourObject | Add-Member -MemberType NoteProperty -Name "Compression Setting Application DyanamicType" -Value "Value - Application/json is not found in IIS Configuration Editor->System.WebServer/httpCompression/dynamicTypes"
                 }
             }
 
             if ($ShowCompressionSettingImageDynamicTypes) {
                 if (((Get-WebConfigurationProperty -pspath 'MACHINE/WEBROOT/APPHOST' -filter "system.webServer/httpCompression" -Name "dynamicTypes").Collection  | Where-Object { $_.mimeType -eq 'image/svg+xml' }).Length -eq 1) {
                     $output += "`n Value - image/svg+xml configured in IIS Configuration Editor->System.WebServer/httpCompression/dynamicTypes"
+                    $ourObject | Add-Member -MemberType NoteProperty -Name "Compression Setting SVGXML DyanamicType" -Value "Value - image/svg+xml configured in IIS Configuration Editor->System.WebServer/httpCompression/dynamicTypes"
                 }
                 else {
                     $output += "`n Value - image/svg+xml - is not found in IIS Configuration Editor->System.WebServer/httpCompression/dynamicTypes"
+                    $ourObject | Add-Member -MemberType NoteProperty -Name "Compression Setting SVGXML DyanamicType" -Value "Value - image/svg+xml - is not found in IIS Configuration Editor->System.WebServer/httpCompression/dynamicTypes"
                 }
             }
 
             if ($ShowCompressionSettingApplicationStaticTypes) {
                 if (((Get-WebConfigurationProperty -pspath 'MACHINE/WEBROOT/APPHOST' -filter "system.webServer/httpCompression" -Name "staticTypes").Collection  | Where-Object { $_.mimeType -eq 'application/json' }).Length -eq 1) {
                     $output += "`n Value - Application/json  already configured in IIS Configuration Editor->System.WebServer/httpCompression/staticTypes"
+                    $ourObject | Add-Member -MemberType NoteProperty -Name "Compression Setting Application StaticType" -Value "Value - Application/json already configured in IIS Configuration Editor->System.WebServer/httpCompression/staticTypes"
                 }
                 else {
                     $output += "`n Value - Application/json - is not found in IIS Configuration Editor->System.WebServer/httpCompression/staticType"
+                    $ourObject | Add-Member -MemberType NoteProperty -Name "Compression Setting Application StaticType" -Value "Value - Application/json is not found in IIS Configuration Editor->System.WebServer/httpCompression/staticTypes"
                 }
             }
 
             if ($ShowCompressionSettingImageStaticTypes) {
                 if (((Get-WebConfigurationProperty -pspath 'MACHINE/WEBROOT/APPHOST' -filter "system.webServer/httpCompression" -Name "staticTypes").Collection  | Where-Object { $_.mimeType -eq 'image/svg+xml' }).Length -eq 1) {
                     $output += "`n Value - image/svg+xml configured in IIS Configuration Editor->System.WebServer/httpCompression/staticTypes"
+                    $ourObject | Add-Member -MemberType NoteProperty -Name "Compression Setting SVGXML DyanamicType" -Value "Value - image/svg+xml configured in IIS Configuration Editor->System.WebServer/httpCompression/staticTypes"
                 }
                 else {
                     $output += "`n Value - image/svg+xml - is not found in IIS Configuration Editor->System.WebServer/httpCompression/staticTypes"
+                    $ourObject | Add-Member -MemberType NoteProperty -Name "Compression Setting SVGXML DyanamicType" -Value "Value - image/svg+xml - is not found in IIS Configuration Editor->System.WebServer/httpCompression/staticTypes"
                 }
             }
         }
@@ -325,9 +348,10 @@ function Get-IIsConfiguration {
     }
     End {
         $filePath = $outputFolder + "/" + $outputFile
-        $output | Out-File -Append $filePath -Encoding UTF8
+        $ourObject | Out-File -Append $filePath -Encoding UTF8
         Write-Host "Check the output at File "  $filePath -ForegroundColor Yellow
-        return $output | Format-List
+        return $ourObject
+        #return $output | Format-List
     }
 }
 

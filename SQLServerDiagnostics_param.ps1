@@ -281,12 +281,15 @@ function Get-ServerDiagnostics {
             }
             if ($showmodelback) {
                 $output += "`n Model Database backup performed: $modelback"
+                $ourObject | Add-Member -MemberType NoteProperty -Name $db.Name + "Model Database backup performed" -Value $modelback
             }
             if ($showmasterback) {
                 $output += "`n Master Database backup performed: $masterback"
+                $ourObject | Add-Member -MemberType NoteProperty -Name $db.Name + "Master Database backup performed" -Value $masterback
             }
             if ($showmsdbback) {
                 $output += "`n MSDB Database backup performed: $msdbback"
+                $ourObject | Add-Member -MemberType NoteProperty -Name $db.Name + "MSDB Database backup performed" -Value $msdbback
             }
             
             $DbIntegrityCheckDate = $server.Databases[3].ExecuteWithResults("DBCC DBINFO () WITH TABLERESULTS").Tables[0] | Where-Object { $_.Field -eq "dbi_dbccLastKnownGood" }  | Select-Object Value
@@ -315,7 +318,7 @@ function Get-ServerDiagnostics {
     End {
         #$output | Export-Csv -Path $outpuFile
         $filePath = $outputFolder + "/" + $outputFile
-        $output | Out-File -Append $filePath -Encoding UTF8
+        $ourObject | Out-File -Append $filePath -Encoding UTF8
         Write-Host "Check the output at File "  $filePath -ForegroundColor Yellow
         return $ourObject
         # return $output | Format-List

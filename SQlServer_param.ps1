@@ -472,7 +472,7 @@ function Get-MachineDetails {
                 }
                 $totalMemoryforSQL = $availableMemorybySql.sqlavailmemory + $UsedMemorybySql.sqlusedmemory
                 $output += "`n Total Memory Allocated: " + $totalMemoryforSQL + "MB"
-                $memoryValue = $totalMemoryforSQL + "MB"
+                $memoryValue = "" + $totalMemoryforSQL + "MB"
                 $ourObject | Add-Member -MemberType NoteProperty -Name "Total Memory Allocated" -Value $memoryValue
             }
             if ($showCDriveSpace) {
@@ -810,7 +810,7 @@ function Get-MachineDetails {
     }
     End {
         $filePath = $outputFolder + "/" + $outputFile
-        $output | Out-File -Append $filePath -Encoding UTF8
+        $ourObject | Out-File -Append $filePath -Encoding UTF8
         Write-Host "Check the output at File "  $filePath -ForegroundColor Yellow
         return $ourObject
         # return $output | Format-List

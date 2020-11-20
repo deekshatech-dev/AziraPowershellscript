@@ -236,7 +236,7 @@ function Get-SSASConfiguration {
     }
     End {
         $filePath = $outputFolder + "/" + $outputFile
-        $output | Out-File -Append $filePath -Encoding UTF8
+        $ourObject | Out-File -Append $filePath -Encoding UTF8
         Write-Host "Check the output at File "  $filePath -ForegroundColor Yellow
         return $ourObject
         # return $output | Format-List
